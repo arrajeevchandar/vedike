@@ -1,0 +1,2 @@
+import { redirect } from "next/navigation";import { LoginForm } from "@/components/admin/login-form";import { getAdminSession } from "@/lib/auth";
+export default async function AdminLoginPage(){if(await getAdminSession())redirect("/admin");return <main style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:20,background:"radial-gradient(circle at 30% 20%,rgba(230,57,70,.2),transparent 32%),radial-gradient(circle at 80% 80%,rgba(154,77,255,.14),transparent 35%),#0b0608"}}><LoginForm/></main>}

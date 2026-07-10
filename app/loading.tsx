@@ -1,0 +1,1 @@
+export default function Loading(){return <main style={{minHeight:"60vh",display:"grid",placeItems:"center"}}><div style={{textAlign:"center"}}><div className="kannada" style={{fontSize:58,color:"var(--gold)",animation:"vd-pulse 1.2s infinite"}}>ವೇ</div><p className="eyebrow">Preparing the stage</p></div></main>}
