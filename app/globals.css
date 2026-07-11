@@ -15,7 +15,7 @@
 }
 
 * { box-sizing: border-box; }
-html { background: var(--surface); color-scheme: dark; scroll-behavior: smooth; }
+html { background: var(--surface); color-scheme: dark; scroll-behavior: auto; }
 body { margin: 0; background: radial-gradient(ellipse 90% 50% at 80% -10%, rgba(59,10,18,.75), transparent 60%), radial-gradient(ellipse 70% 40% at 0 100%, rgba(42,14,46,.45), transparent 60%), var(--surface); color: var(--cream); font-family: var(--font-instrument), system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 a { color: inherit; }
 button, input, textarea, select { font: inherit; }
