@@ -1,2 +1,3 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";import { PublicShell } from "@/components/public/public-shell";import { ListingClient } from "@/components/public/listing-client";import { getCompetitions } from "@/lib/data";
 export const metadata:Metadata={title:"Competitions"};export default async function CompetitionsPage(){const competitions=await getCompetitions();return <PublicShell><div className="shell page-pad"><div className="eyebrow kannada">ಸ್ಪರ್ಧೆಗಳು · Community Talent</div><h1 className="page-title">Open <span className="gradient-text">Competitions</span></h1><p className="muted">Enter with one photo, tell your story and let the community decide.</p><ListingClient kind="competitions" items={competitions}/></div></PublicShell>}

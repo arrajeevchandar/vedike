@@ -1,0 +1,6 @@
+CREATE UNIQUE INDEX "competition_submission_unique" ON "competition_winners" USING btree ("competition_id","submission_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "vote_orders_unresolved_phone_unique" ON "vote_orders" USING btree ("voter_phone_hash") WHERE "vote_orders"."state" in ('CREATED', 'PENDING');--> statement-breakpoint
+ALTER TABLE "competitions" ADD CONSTRAINT "competition_entry_limit_positive" CHECK ("competitions"."max_entries_per_participant" is null or "competitions"."max_entries_per_participant" > 0);--> statement-breakpoint
+ALTER TABLE "entry_identity_counters" ADD CONSTRAINT "entry_identity_count_nonnegative" CHECK ("entry_identity_counters"."count" >= 0);--> statement-breakpoint
+ALTER TABLE "submissions" ADD CONSTRAINT "submission_vote_counts_nonnegative" CHECK ("submissions"."paid_vote_count" >= 0 and "submissions"."showcase_vote_count" >= 0);--> statement-breakpoint
+ALTER TABLE "vote_orders" ADD CONSTRAINT "vote_currency_inr" CHECK ("vote_orders"."currency" = 'INR');

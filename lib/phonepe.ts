@@ -38,6 +38,10 @@ export async function getPhonePeOrderStatus(merchantOrderId: string) {
   return getPhonePeClient().getOrderStatus(merchantOrderId, false);
 }
 
+export async function getPhonePeRefundStatus(merchantRefundId: string) {
+  return getPhonePeClient().getRefundStatus(merchantRefundId);
+}
+
 export function validatePhonePeCallback(authorization: string, body: string) {
   return getPhonePeClient().validateCallback(required("PHONEPE_WEBHOOK_USERNAME"), required("PHONEPE_WEBHOOK_PASSWORD"), authorization, body);
 }

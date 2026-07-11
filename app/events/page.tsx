@@ -1,2 +1,3 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";import { PublicShell } from "@/components/public/public-shell";import { ListingClient } from "@/components/public/listing-client";import { getEvents } from "@/lib/data";
 export const metadata:Metadata={title:"Community Events"};export default async function EventsPage(){const events=await getEvents();return <PublicShell><div className="shell page-pad"><div className="eyebrow kannada">ಹಬ್ಬಗಳು · Festivals & Gatherings</div><h1 className="page-title">Community <span className="gradient-text">Events</span></h1><p className="muted">Discover every live, upcoming and completed celebration. Concurrent events are always welcome.</p><ListingClient kind="events" items={events}/></div></PublicShell>}

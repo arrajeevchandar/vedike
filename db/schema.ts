@@ -55,7 +55,7 @@ export const competitions = pgTable("competitions", {
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [check("competition_date_order", sql`${t.endsAt} > ${t.startsAt}`), index("competitions_event_idx").on(t.eventId, t.startsAt)]);
+}, (t) => [check("competition_date_order", sql`${t.endsAt} > ${t.startsAt}`), check("competition_entry_limit_positive", sql`${t.maxEntriesPerParticipant} is null or ${t.maxEntriesPerParticipant} > 0`), index("competitions_event_idx").on(t.eventId, t.startsAt)]);
 
 export const submissions = pgTable("submissions", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -76,14 +76,14 @@ export const submissions = pgTable("submissions", {
   lastVoteReachedAt: timestamp("last_vote_reached_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [index("submissions_competition_idx").on(t.competitionId, t.state), index("submissions_phone_idx").on(t.competitionId, t.participantPhoneHash), index("submissions_email_idx").on(t.competitionId, t.participantEmailHash)]);
+}, (t) => [check("submission_vote_counts_nonnegative", sql`${t.paidVoteCount} >= 0 and ${t.showcaseVoteCount} >= 0`), index("submissions_competition_idx").on(t.competitionId, t.state), index("submissions_phone_idx").on(t.competitionId, t.participantPhoneHash), index("submissions_email_idx").on(t.competitionId, t.participantEmailHash)]);
 
 export const entryIdentityCounters = pgTable("entry_identity_counters", {
   competitionId: uuid("competition_id").notNull().references(() => competitions.id, { onDelete: "restrict" }),
   identityHash: text("identity_hash").notNull(),
   count: integer("count").notNull().default(0),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [uniqueIndex("entry_identity_unique").on(t.competitionId, t.identityHash)]);
+}, (t) => [uniqueIndex("entry_identity_unique").on(t.competitionId, t.identityHash), check("entry_identity_count_nonnegative", sql`${t.count} >= 0`)]);
 
 export const voteOrders = pgTable("vote_orders", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -109,7 +109,7 @@ export const voteOrders = pgTable("vote_orders", {
   refundedAt: timestamp("refunded_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [check("vote_amount_fixed", sql`${t.amountPaise} = 200`), index("vote_orders_competition_idx").on(t.competitionId, t.state), index("vote_orders_phone_idx").on(t.voterPhoneHash, t.state)]);
+}, (t) => [check("vote_amount_fixed", sql`${t.amountPaise} = 200`), check("vote_currency_inr", sql`${t.currency} = 'INR'`), uniqueIndex("vote_orders_unresolved_phone_unique").on(t.voterPhoneHash).where(sql`${t.state} in ('CREATED', 'PENDING')`), index("vote_orders_competition_idx").on(t.competitionId, t.state), index("vote_orders_phone_idx").on(t.voterPhoneHash, t.state)]);
 
 export const paymentEvents = pgTable("payment_events", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -128,7 +128,7 @@ export const competitionWinners = pgTable("competition_winners", {
   voteCountSnapshot: integer("vote_count_snapshot").notNull(),
   tieBreakAt: timestamp("tie_break_at", { withTimezone: true }).notNull(),
   lockedAt: timestamp("locked_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [uniqueIndex("competition_rank_unique").on(t.competitionId, t.rank), check("winner_rank_range", sql`${t.rank} between 1 and 3`)]);
+}, (t) => [uniqueIndex("competition_rank_unique").on(t.competitionId, t.rank), uniqueIndex("competition_submission_unique").on(t.competitionId, t.submissionId), check("winner_rank_range", sql`${t.rank} between 1 and 3`)]);
 
 export const adminAuditLog = pgTable("admin_audit_log", {
   id: uuid("id").primaryKey().defaultRandom(),
