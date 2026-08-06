@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
-import { createVedikeScene } from "./three-scene";
+import { useEffect, useRef, useState } from "react";
+import { createSavitriScene } from "./three-scene";
 import styles from "./home.module.css";
+import responsiveStyles from "./home-responsive.module.css";
+import { SiteSplash } from "./site-splash";
 
 const chapters = [
   {
@@ -29,19 +31,21 @@ const chapters = [
 ];
 
 function HomeNavigation() {
+  const [open, setOpen] = useState(false);
   return (
-    <nav className={styles.nav} aria-label="Primary navigation">
-      <Link href="/" className={styles.brand}><span className="kannada">ವೇ</span><strong>VEDIKE</strong></Link>
-      <div className={styles.navLinks}>
-        <Link href="/events">Events</Link>
-        <Link href="/leaderboard">Leaderboard</Link>
-        <Link href="/admin/login" className={styles.adminLink}>Admin Login</Link>
+    <nav className={`${styles.nav} ${responsiveStyles.nav}`} aria-label="Primary navigation">
+      <Link href="/" className={`${styles.brand} ${responsiveStyles.brand}`}><span className="kannada">ಸ</span><strong>SAVITRI FOUNDATION</strong></Link>
+      <button type="button" className={responsiveStyles.menuButton} onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-controls="home-navigation-menu">{open ? "Close" : "Menu"}</button>
+      <div id="home-navigation-menu" className={`${styles.navLinks} ${responsiveStyles.navLinks} ${open ? responsiveStyles.navOpen : ""}`}>
+        <Link href="/events" onClick={() => setOpen(false)}>Events</Link>
+        <Link href="/leaderboard" onClick={() => setOpen(false)}>Leaderboard</Link>
+        <Link href="/admin/login" onClick={() => setOpen(false)} className={styles.adminLink}>Admin Login</Link>
       </div>
     </nav>
   );
 }
 
-export function HomeExperience() {
+export function HomeExperience({ showSplash }: { showSplash: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const runwayRef = useRef<HTMLDivElement>(null);
@@ -56,7 +60,7 @@ export function HomeExperience() {
     if (!root || !canvas || !runway || !reveal) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const scene = reduced ? null : createVedikeScene(canvas, { density: 1, drift: true });
+    const scene = reduced ? null : createSavitriScene(canvas, { density: 1, drift: true });
     let dead = false;
     let frame = 0;
     const introStart = performance.now();
@@ -114,6 +118,7 @@ export function HomeExperience() {
 
   return (
     <div ref={rootRef} className={styles.home}>
+      <SiteSplash initialVisible={showSplash} />
       <div ref={canvasRef} className={styles.canvas} data-home-canvas aria-hidden="true" />
       <div className={styles.vignette} aria-hidden="true" />
       <HomeNavigation />
@@ -132,7 +137,7 @@ export function HomeExperience() {
               <ChapterTag className="display">{chapter.title}</ChapterTag>
               <p data-word>{chapter.copy}</p>
               {index === 0 && <>
-                <div data-word className={styles.ctas}>
+                <div data-word className={`${styles.ctas} ${responsiveStyles.ctas}`}>
                   <Link href="/events" onMouseMove={magnet} onMouseLeave={magnetLeave} className={styles.primary}>Explore Events</Link>
                   <Link href="/events" onMouseMove={magnet} onMouseLeave={magnetLeave} className={styles.secondary}>Join the Celebration</Link>
                 </div>
@@ -148,7 +153,7 @@ export function HomeExperience() {
           <div className={styles.revealBadge}><span />The Celebration Reveal</div>
           <h2 className="display">Your Community,<br /><span>Now Online</span></h2>
           <p>A modern platform for Kannada community events, competitions, submissions, voting, and winner reveals.</p>
-          <div className={styles.revealCtas}>
+          <div className={`${styles.revealCtas} ${responsiveStyles.revealCtas}`}>
             <Link href="/events" onMouseMove={magnet} onMouseLeave={magnetLeave} className={styles.primary}>View Events</Link>
             <Link href="/admin/login" onMouseMove={magnet} onMouseLeave={magnetLeave} className={styles.secondary}>Admin Login</Link>
           </div>
@@ -170,7 +175,7 @@ export function HomeExperience() {
           </div>
         </div>
         <footer className={styles.footer}>
-          <div><span className="kannada">ವೇ</span><b>VEDIKE</b><small>Namma stage. Namma pride.</small></div>
+          <div><span className="kannada">ಸ</span><b>SAVITRI FOUNDATION</b><small>Namma stage. Namma pride.</small></div>
           <nav><Link href="/events">Events</Link><Link href="/leaderboard">Leaderboard</Link><Link href="/admin/login">Admin</Link></nav>
         </footer>
       </section>

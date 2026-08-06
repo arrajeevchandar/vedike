@@ -8,9 +8,9 @@ const baloo = Baloo_Tamma_2({ subsets: ["kannada", "latin"], variable: "--font-b
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
-  title: { default: "Vedike — Kannada Community Platform", template: "%s · Vedike" },
+  title: { default: "Savitri Foundation — Kannada Community Platform", template: "%s · Savitri Foundation" },
   description: "A modern digital stage for Kannada community events, competitions, submissions and voting.",
-  openGraph: { title: "Vedike", description: "Where culture meets community.", type: "website" },
+  openGraph: { title: "Savitri Foundation", description: "Where culture meets community.", type: "website" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -5,20 +5,20 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-const COOKIE_NAME = "vedike_admin";
+const COOKIE_NAME = "savitri_foundation_admin";
 const SESSION_SECONDS = 60 * 60 * 8;
 
 function authKey() {
   const secret = process.env.AUTH_SECRET;
   if (!secret && process.env.NODE_ENV === "production") throw new Error("AUTH_SECRET must be configured in production.");
-  return new TextEncoder().encode(secret ?? "vedike-development-auth-secret-change-me");
+  return new TextEncoder().encode(secret ?? "savitri-foundation-development-auth-secret-change-me");
 }
 
 export async function verifyAdminCredentials(email: string, password: string) {
-  const expectedEmail = process.env.ADMIN_EMAIL ?? "admin@vedike.in";
+  const expectedEmail = process.env.ADMIN_EMAIL ?? "admin@savitrifoundation.in";
   if (email.trim().toLowerCase() !== expectedEmail.toLowerCase()) return false;
   const hash = process.env.ADMIN_PASSWORD_HASH;
-  if (!hash) return process.env.NODE_ENV !== "production" && password === "vedike-demo";
+  if (!hash) return process.env.NODE_ENV !== "production" && password === "savitri-demo";
   return compare(password, hash);
 }
 

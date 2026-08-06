@@ -27,7 +27,7 @@ export async function createPhonePeOrder(input: { merchantOrderId: string; redir
     .merchantOrderId(input.merchantOrderId)
     .amount(VOTE_PRICE_PAISE)
     .redirectUrl(input.redirectUrl)
-    .message("One Vedike community vote")
+    .message("One Savitri Foundation community vote")
     .expireAfter(900)
     .disablePaymentRetry(false)
     .build();

@@ -79,3 +79,20 @@ button, a { -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
+
+@media (max-width: 760px) {
+  body { min-width: 0; }
+  .field, textarea.field, select.field { font-size: 16px; }
+  .admin-form-grid { grid-template-columns: 1fr !important; }
+  .admin-record-row, .admin-payment-row { grid-template-columns: 1fr !important; }
+  .admin-record-row > :last-child, .admin-payment-row > :last-child { justify-self: start; }
+  .leaderboard-row { grid-template-columns: 36px minmax(0, 1fr) auto !important; gap: 10px !important; padding: 13px 14px !important; }
+  .policy-copy { font-size: 16px !important; }
+}
+
+@media (max-width: 420px) {
+  .shell { width: min(100% - 22px, 1180px); }
+  .page-pad { padding-block: 30px 58px; }
+  .btn { padding: 11px 16px; }
+  .badge { max-width: 100%; white-space: normal; }
+}

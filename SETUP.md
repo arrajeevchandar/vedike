@@ -1,4 +1,4 @@
-# Vedike Setup and Go-Live Guide
+# Savitri Foundation Setup and Go-Live Guide
 
 ## 1. Prerequisites
 
@@ -78,7 +78,7 @@ PII_ENCRYPTION_KEY=<second random secret>
 
 `PII_ENCRYPTION_KEY` encrypts phone numbers, emails and voter identity with AES-256-GCM and derives non-reversible identity hashes. Rotating it requires a data migration; do not replace it casually.
 
-When admin credentials are absent in local development only, the fallback is `admin@vedike.in` / `vedike-demo`. Production refuses that fallback.
+When admin credentials are absent in local development only, the fallback is `admin@savitrifoundation.in` / `savitri-demo`. Production refuses that fallback.
 
 ## 4. Database migrations and showcase seed
 

@@ -10,7 +10,7 @@ function masterKey() {
     return createHash("sha256").update(configured).digest();
   }
   if (process.env.NODE_ENV === "production") throw new Error("PII_ENCRYPTION_KEY must be configured in production.");
-  return createHash("sha256").update("vedike-development-only-key").digest();
+  return createHash("sha256").update("savitri-foundation-development-only-key").digest();
 }
 
 function derivedKey(purpose: string) {

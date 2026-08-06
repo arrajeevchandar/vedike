@@ -65,7 +65,7 @@ export default async function AdminCompetitionsPage() {
       <details className="glass" open style={{ borderRadius: 18, padding: 22, marginBottom: 25 }}>
         <summary className="display" style={{ fontWeight: 700, cursor: "pointer" }}>+ Create Competition</summary>
         {canCreate ? (
-          <form action={saveCompetitionAction} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>
+          <form action={saveCompetitionAction} className="admin-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>
             <CompetitionFields events={data.events} />
             <button className="btn btn-primary" style={{ gridColumn: "1/-1", marginTop: 18 }}>Create Competition</button>
           </form>
@@ -86,7 +86,7 @@ export default async function AdminCompetitionsPage() {
             {!competition.isShowcase && competition.lifecycle === "PUBLISHED" && (
               <details style={{ marginTop: 16 }}>
                 <summary style={{ cursor: "pointer", color: "var(--gold)" }}>Edit competition</summary>
-                <form action={saveCompetitionAction} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>
+                <form action={saveCompetitionAction} className="admin-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>
                   <CompetitionFields events={data.events} competition={competition} />
                   <button className="btn btn-secondary" style={{ gridColumn: "1/-1", marginTop: 12 }}>Save changes</button>
                 </form>

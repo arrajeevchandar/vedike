@@ -43,7 +43,7 @@ function posterTexture(glyph: string, from: string, to: string) {
 
 type SceneOptions = { density?: number; drift?: boolean };
 
-export function createVedikeScene(container: HTMLElement, options: SceneOptions = {}) {
+export function createSavitriScene(container: HTMLElement, options: SceneOptions = {}) {
   const mobile = window.innerWidth < 700;
   const density = (options.density ?? 1) * (mobile ? 0.55 : 1);
   const drift = options.drift !== false;
@@ -448,8 +448,9 @@ export function createVedikeScene(container: HTMLElement, options: SceneOptions 
     gridMaterial.opacity = 0.5 * neonProgress;
     streaks.forEach(({ mesh, curve, offset, speed }) => {
       const at = (offset + time * speed) % 1;
-      const position = curve.getPointAt(at);
-      const tangent = curve.getTangentAt(at);
+      const position = curve?.getPointAt?.(at);
+      const tangent = curve?.getTangentAt?.(at);
+      if (!position || !tangent) return;
       mesh.position.copy(position).y += 0.3;
       mesh.lookAt(position.clone().add(tangent));
       mesh.material.opacity = 0.85 * neonProgress;

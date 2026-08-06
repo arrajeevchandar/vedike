@@ -20,7 +20,7 @@ export default async function AdminSubmissionsPage() {
           const realSubmission = !showcase && "state" in submission;
           return (
             <article
-              className="glass"
+              className="glass admin-record-row"
               key={submission.id}
               style={{
                 padding: 18,

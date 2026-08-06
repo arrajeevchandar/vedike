@@ -17,7 +17,7 @@ export async function checkRateLimit(namespace: string, identifier: string, limi
   const key = `${namespace}:${limit}:${window}`;
   let limiter = limiters.get(key);
   if (!limiter) {
-    limiter = new Ratelimit({ redis: client, limiter: Ratelimit.slidingWindow(limit, window), prefix: `vedike:${namespace}`, analytics: true });
+    limiter = new Ratelimit({ redis: client, limiter: Ratelimit.slidingWindow(limit, window), prefix: `savitri-foundation:${namespace}`, analytics: true });
     limiters.set(key, limiter);
   }
   return limiter.limit(identifier);

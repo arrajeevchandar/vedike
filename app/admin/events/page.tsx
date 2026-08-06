@@ -24,7 +24,7 @@ export default async function AdminEventsPage() {
       <h1 className="page-title" style={{ fontSize: 48 }}>Events</h1>
       <details className="glass" open style={{ borderRadius: 18, padding: 22, marginBottom: 25 }}>
         <summary className="display" style={{ fontWeight: 700, cursor: "pointer" }}>+ Create Event</summary>
-        <form action={saveEventAction} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>
+        <form action={saveEventAction} className="admin-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>
           <label className="form-label" style={{ gridColumn: "1/-1" }}>Title</label>
           <input className="field" name="title" required style={{ gridColumn: "1/-1" }} />
           <label className="form-label" style={{ gridColumn: "1/-1" }}>Description</label>
@@ -49,7 +49,7 @@ export default async function AdminEventsPage() {
             {!event.isShowcase && (
               <details style={{ marginTop: 16 }}>
                 <summary style={{ cursor: "pointer", color: "var(--gold)" }}>Edit event</summary>
-                <form action={saveEventAction} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>
+                <form action={saveEventAction} className="admin-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>
                   <input type="hidden" name="id" value={event.id} />
                   <label className="form-label" style={{ gridColumn: "1/-1" }}>Title</label>
                   <input className="field" name="title" required defaultValue={event.title} style={{ gridColumn: "1/-1" }} />

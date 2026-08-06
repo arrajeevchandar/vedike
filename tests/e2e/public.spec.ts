@@ -1,7 +1,21 @@
 import { expect, test } from "@playwright/test";
 
+test("opening splash runs once per browser session and transitions into the home page", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText(/SRI\s+ವಸುದಾ\s+CREATION/i)).toBeVisible();
+  await page.getByRole("button", { name: "Skip intro" }).click();
+  await expect(page.getByRole("button", { name: "Skip intro" })).toBeHidden({ timeout: 1500 });
+  await expect(page.getByRole("heading", { name: /Where Culture Meets Community/i })).toBeVisible();
+
+  await page.goto("/events");
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Skip intro" })).toHaveCount(0);
+});
+
 test("home and public showcase are navigable", async ({ page }) => {
   await page.goto("/");
+  const skip = page.getByRole("button", { name: "Skip intro" });
+  if (await skip.count()) await skip.click();
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(page.getByRole("heading", { name: /Where Culture Meets Community/i })).toBeVisible();
   await page.goto("/events");
@@ -21,6 +35,8 @@ test("prototype home scroll windows stay stable without renderer errors", async 
     }
   });
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  const skip = page.getByRole("button", { name: "Skip intro" });
+  if (await skip.count()) await skip.click();
   await page.evaluate(() => window.scrollTo(0, 0));
   const progressWindows = [
     [0, 0],
