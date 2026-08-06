@@ -4,7 +4,8 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import sharp from "sharp";
 import { getDb, hasDatabase } from "@/db";
 import { competitions, entryIdentityCounters, events, submissions } from "@/db/schema";
-import { deriveStatus, normalizeEmail, normalizeIndianPhone } from "@/lib/domain";
+import { normalizeEmail, normalizeIndianPhone } from "@/lib/domain";
+import { applicationWindowOpen } from "@/lib/competition-phase";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { assertTrustedOrigin, encryptPii, hashIdentity } from "@/lib/security";
 import { submissionSchema } from "@/lib/validation";
@@ -78,8 +79,7 @@ export async function POST(request: Request) {
     if (
       !eligible ||
       eligible.competition.isShowcase ||
-      eligible.competition.lifecycle !== "PUBLISHED" ||
-      deriveStatus(eligible.competition) !== "live"
+      !applicationWindowOpen(eligible.competition)
     ) {
       return Response.json(
         { error: "This competition is not accepting entries." },
@@ -126,8 +126,7 @@ export async function POST(request: Request) {
           !current ||
           current.event.publicationState !== "PUBLISHED" ||
           current.competition.isShowcase ||
-          current.competition.lifecycle !== "PUBLISHED" ||
-          deriveStatus(current.competition) !== "live"
+          !applicationWindowOpen(current.competition)
         ) {
           throw new Error("COMPETITION_CLOSED");
         }

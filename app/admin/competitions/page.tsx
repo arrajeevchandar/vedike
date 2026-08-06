@@ -4,6 +4,7 @@ import {
   saveCompetitionAction,
 } from "@/app/admin/actions";
 import { getDashboardData } from "@/lib/data";
+import { CompetitionReleaseDialog } from "@/components/admin/competition-release-dialog";
 
 function toIstInput(value: Date | string) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -44,8 +45,12 @@ function CompetitionFields({
       <textarea className="field" name="description" rows={3} required defaultValue={competition?.description} style={{ gridColumn: "1/-1" }} />
       <label className="form-label" style={{ gridColumn: "1/-1" }}>Rules (one per line)</label>
       <textarea className="field" name="rules" rows={3} defaultValue={competition?.rules.join("\n")} style={{ gridColumn: "1/-1" }} />
-      <div><label className="form-label">Starts (IST)</label><input className="field" type="datetime-local" name="startsAt" required defaultValue={competition ? toIstInput(competition.startsAt) : undefined} /></div>
-      <div><label className="form-label">Ends (IST)</label><input className="field" type="datetime-local" name="endsAt" required defaultValue={competition ? toIstInput(competition.endsAt) : undefined} /></div>
+      <div style={{ gridColumn: "1/-1", marginTop: 8 }} className="eyebrow">Application window</div>
+      <div><label className="form-label">Opens (IST)</label><input className="field" type="datetime-local" name="applicationStartsAt" required defaultValue={competition ? toIstInput(competition.applicationStartsAt ?? competition.startsAt) : undefined} /></div>
+      <div><label className="form-label">Closes (IST)</label><input className="field" type="datetime-local" name="applicationEndsAt" required defaultValue={competition ? toIstInput(competition.applicationEndsAt ?? competition.startsAt) : undefined} /></div>
+      <div style={{ gridColumn: "1/-1", marginTop: 8 }} className="eyebrow">Voting window</div>
+      <div><label className="form-label">Opens (IST)</label><input className="field" type="datetime-local" name="votingStartsAt" required defaultValue={competition ? toIstInput(competition.votingStartsAt ?? competition.startsAt) : undefined} /></div>
+      <div><label className="form-label">Closes (IST)</label><input className="field" type="datetime-local" name="votingEndsAt" required defaultValue={competition ? toIstInput(competition.votingEndsAt ?? competition.endsAt) : undefined} /></div>
       <div><label className="form-label">Entry limit</label><input className="field" type="number" min="1" max="100" name="maxEntries" defaultValue={competition?.maxEntriesPerParticipant ?? ""} placeholder="Unlimited" /></div>
     </>
   );
@@ -83,7 +88,14 @@ export default async function AdminCompetitionsPage() {
               </div>
               {!competition.isShowcase && <form action={archiveCompetitionAction}><input type="hidden" name="id" value={competition.id} /><button className="btn btn-secondary" style={{ padding: "8px 14px", color: "#ff8a8f" }}>Archive</button></form>}
             </div>
-            {!competition.isShowcase && competition.lifecycle === "PUBLISHED" && (
+            {!competition.isShowcase && competition.lifecycle === "APPLICATIONS_OPEN" && (
+              <CompetitionReleaseDialog
+                competitionId={competition.id}
+                competitionTitle={competition.title}
+                entries={data.submissions.filter((submission) => submission.competitionId === competition.id && "state" in submission && submission.state === "PENDING_REVIEW").map((submission) => ({ id: submission.id, name: "participantName" in submission ? submission.participantName : submission.name, description: submission.description }))}
+              />
+            )}
+            {!competition.isShowcase && competition.lifecycle === "APPLICATIONS_OPEN" && (
               <details style={{ marginTop: 16 }}>
                 <summary style={{ cursor: "pointer", color: "var(--gold)" }}>Edit competition</summary>
                 <form action={saveCompetitionAction} className="admin-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginTop: 14 }}>

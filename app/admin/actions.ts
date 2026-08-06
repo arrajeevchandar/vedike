@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -25,6 +25,8 @@ import { istInputToUtc, slugify } from "@/lib/domain";
 import { competitionSchema, eventSchema } from "@/lib/validation";
 import { finalizeCompetitionWorkflow } from "@/workflows/finalize-competition";
 import { reconcilePaymentWorkflow } from "@/workflows/reconcile-payment";
+import { competitionPhaseWorkflow } from "@/workflows/competition-phase";
+import { votingWindowOpen } from "@/lib/competition-phase";
 
 export type LoginState = { error?: string };
 
@@ -197,8 +199,10 @@ export async function saveCompetitionAction(form: FormData) {
     title: form.get("title"),
     description: form.get("description"),
     rules: form.get("rules"),
-    startsAt: istInputToUtc(String(form.get("startsAt") ?? "")),
-    endsAt: istInputToUtc(String(form.get("endsAt") ?? "")),
+    applicationStartsAt: istInputToUtc(String(form.get("applicationStartsAt") ?? "")),
+    applicationEndsAt: istInputToUtc(String(form.get("applicationEndsAt") ?? "")),
+    votingStartsAt: istInputToUtc(String(form.get("votingStartsAt") ?? "")),
+    votingEndsAt: istInputToUtc(String(form.get("votingEndsAt") ?? "")),
     maxEntriesPerParticipant: rawLimit === "" ? "" : Number(rawLimit),
   });
   if (!parsed.success) {
@@ -213,7 +217,7 @@ export async function saveCompetitionAction(form: FormData) {
     .map((value) => value.trim())
     .filter(Boolean);
   const db = ensureDb();
-  await db.transaction(async (tx) => {
+  const phaseSchedule = await db.transaction(async (tx) => {
     const [event] = await tx
       .select()
       .from(events)
@@ -223,8 +227,8 @@ export async function saveCompetitionAction(form: FormData) {
       !event ||
       event.isShowcase ||
       event.publicationState === "ARCHIVED" ||
-      parsed.data.startsAt < event.startsAt ||
-      parsed.data.endsAt > event.endsAt
+      parsed.data.applicationStartsAt < event.startsAt ||
+      parsed.data.votingEndsAt > event.endsAt
     ) {
       validationError("Competition dates must be inside an active parent event.");
     }
@@ -237,9 +241,9 @@ export async function saveCompetitionAction(form: FormData) {
       if (
         !existing ||
         existing.isShowcase ||
-        existing.lifecycle !== "PUBLISHED"
+        existing.lifecycle !== "APPLICATIONS_OPEN"
       ) {
-        validationError("Only published non-showcase competitions can be edited.");
+        validationError("Only application-stage non-showcase competitions can be edited.");
       }
       await tx
         .update(competitions)
@@ -248,8 +252,12 @@ export async function saveCompetitionAction(form: FormData) {
           title: parsed.data.title,
           description: parsed.data.description,
           rules,
-          startsAt: parsed.data.startsAt,
-          endsAt: parsed.data.endsAt,
+          startsAt: parsed.data.applicationStartsAt,
+          endsAt: parsed.data.votingEndsAt,
+          applicationStartsAt: parsed.data.applicationStartsAt,
+          applicationEndsAt: parsed.data.applicationEndsAt,
+          votingStartsAt: parsed.data.votingStartsAt,
+          votingEndsAt: parsed.data.votingEndsAt,
           maxEntriesPerParticipant,
           updatedAt: new Date(),
         })
@@ -259,7 +267,7 @@ export async function saveCompetitionAction(form: FormData) {
         entityType: "competition",
         entityId: existing.id,
       });
-      return;
+      return { id: existing.id, votingStartsAt: parsed.data.votingStartsAt, votingEndsAt: parsed.data.votingEndsAt };
     }
     const [created] = await tx
       .insert(competitions)
@@ -269,8 +277,14 @@ export async function saveCompetitionAction(form: FormData) {
         title: parsed.data.title,
         description: parsed.data.description,
         rules,
-        startsAt: parsed.data.startsAt,
-        endsAt: parsed.data.endsAt,
+        startsAt: parsed.data.applicationStartsAt,
+        endsAt: parsed.data.votingEndsAt,
+        applicationStartsAt: parsed.data.applicationStartsAt,
+        applicationEndsAt: parsed.data.applicationEndsAt,
+        votingStartsAt: parsed.data.votingStartsAt,
+        votingEndsAt: parsed.data.votingEndsAt,
+        lifecycle: "APPLICATIONS_OPEN",
+        applicationsOpenedAt: new Date(),
         maxEntriesPerParticipant,
         glyph: "ಹೊ",
         banner: "linear-gradient(135deg,#241030,#4A1E5C 55%,#7a2f8f)",
@@ -281,7 +295,14 @@ export async function saveCompetitionAction(form: FormData) {
       entityType: "competition",
       entityId: created.id,
     });
+    return { id: created.id, votingStartsAt: parsed.data.votingStartsAt, votingEndsAt: parsed.data.votingEndsAt };
   });
+  try {
+    const run = await start(competitionPhaseWorkflow, [phaseSchedule.id, phaseSchedule.votingStartsAt.toISOString(), phaseSchedule.votingEndsAt.toISOString()]);
+    await db.update(competitions).set({ phaseWorkflowRunId: run.runId, updatedAt: new Date() }).where(eq(competitions.id, phaseSchedule.id));
+  } catch (error) {
+    console.error("[competition-phase-workflow]", error);
+  }
   revalidatePath("/events");
   revalidatePath("/competitions");
   revalidatePath("/leaderboard");
@@ -340,17 +361,19 @@ export async function moderateSubmissionAction(form: FormData) {
   const state: "VISIBLE" | "HIDDEN" = requestedState;
   const db = ensureDb();
   await db.transaction(async (tx) => {
-    const [submission] = await tx
-      .select()
+    const [row] = await tx
+      .select({ submission: submissions, competition: competitions })
       .from(submissions)
+      .innerJoin(competitions, eq(submissions.competitionId, competitions.id))
       .where(eq(submissions.id, id))
       .limit(1);
     if (
-      !submission ||
-      submission.showcaseVoteCount > 0 ||
-      submission.state === "DISQUALIFIED"
+      !row ||
+      row.submission.showcaseVoteCount > 0 ||
+      row.submission.state === "DISQUALIFIED" ||
+      (state === "VISIBLE" && !votingWindowOpen(row.competition))
     ) {
-      validationError("This showcase submission cannot be moderated.");
+      validationError("This entry cannot be made public outside its voting window.");
     }
     await tx
       .update(submissions)
@@ -361,6 +384,24 @@ export async function moderateSubmissionAction(form: FormData) {
       entityType: "submission",
       entityId: id,
     });
+  });
+  revalidatePath("/competitions");
+  revalidatePath("/leaderboard");
+  revalidatePath("/admin/submissions");
+}
+
+export async function approveSubmissionAction(form: FormData) {
+  await requireAdmin();
+  await assertTrustedOrigin();
+  const id = String(form.get("id") ?? "");
+  const db = ensureDb();
+  await db.transaction(async (tx) => {
+    const [row] = await tx.select({ submission: submissions, competition: competitions }).from(submissions).innerJoin(competitions, eq(submissions.competitionId, competitions.id)).where(eq(submissions.id, id)).limit(1);
+    if (!row || row.submission.showcaseVoteCount > 0 || !["PENDING_REVIEW", "HIDDEN"].includes(row.submission.state) || !votingWindowOpen(row.competition)) {
+      validationError("Only private entries can be released during live voting.");
+    }
+    await tx.update(submissions).set({ state: "VISIBLE", updatedAt: new Date() }).where(eq(submissions.id, id));
+    await tx.insert(adminAuditLog).values({ action: "RELEASE_SUBMISSION_DURING_VOTING", entityType: "submission", entityId: id });
   });
   revalidatePath("/competitions");
   revalidatePath("/leaderboard");
@@ -483,7 +524,7 @@ export async function completeCompetitionAction(form: FormData) {
     .where(
       and(
         eq(competitions.id, id),
-        eq(competitions.lifecycle, "PUBLISHED"),
+        eq(competitions.lifecycle, "VOTING_OPEN"),
         eq(competitions.isShowcase, false),
       ),
     )
@@ -499,4 +540,30 @@ export async function completeCompetitionAction(form: FormData) {
   revalidatePath("/competitions");
   revalidatePath("/leaderboard");
   revalidatePath("/admin/leaderboard");
+}
+
+export async function openVotingAction(form: FormData) {
+  await requireAdmin();
+  await assertTrustedOrigin();
+  const id = String(form.get("id") ?? "");
+  const submissionIds = form.getAll("submissionIds").map(String).filter(Boolean);
+  if (!submissionIds.length) validationError("Select at least one entry before opening voting.");
+  const db = ensureDb();
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${id}, 0))`);
+    const [competition] = await tx.select().from(competitions).where(eq(competitions.id, id)).limit(1);
+    const now = new Date();
+    if (!competition || competition.isShowcase || competition.lifecycle !== "APPLICATIONS_OPEN" || now < competition.applicationStartsAt || now >= competition.votingEndsAt) {
+      validationError("This competition cannot open voting now.");
+    }
+    const eligible = await tx.select({ id: submissions.id }).from(submissions).where(and(eq(submissions.competitionId, id), eq(submissions.state, "PENDING_REVIEW"), inArray(submissions.id, submissionIds)));
+    if (eligible.length !== submissionIds.length) validationError("Only pending entries from this competition can be released.");
+    await tx.update(submissions).set({ state: "VISIBLE", updatedAt: now }).where(and(eq(submissions.competitionId, id), inArray(submissions.id, submissionIds), eq(submissions.state, "PENDING_REVIEW")));
+    await tx.update(competitions).set({ lifecycle: "VOTING_OPEN", votingOpenedAt: now, updatedAt: now }).where(and(eq(competitions.id, id), eq(competitions.lifecycle, "APPLICATIONS_OPEN")));
+    await tx.insert(adminAuditLog).values({ action: "OPEN_VOTING_AND_RELEASE_ENTRIES", entityType: "competition", entityId: id, metadata: { releasedSubmissionCount: submissionIds.length, openedEarly: now < competition.votingStartsAt } });
+  });
+  revalidatePath("/competitions");
+  revalidatePath("/leaderboard");
+  revalidatePath("/admin/competitions");
+  revalidatePath("/admin/submissions");
 }

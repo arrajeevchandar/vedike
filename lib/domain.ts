@@ -1,4 +1,4 @@
-import type { CompetitionLifecycle, DisplayStatus, PublicationState } from "@/lib/types";
+import type { CompetitionLifecycle, CompetitionPhase, DisplayStatus, PublicationState } from "@/lib/types";
 
 export const VOTE_PRICE_PAISE = 200;
 export const VOTE_PRICE_RUPEES = 2;
@@ -20,6 +20,35 @@ export function deriveStatus(input: {
   if (now < start) return "upcoming";
   if (now <= end && input.lifecycle !== "CLOSING") return "live";
   return "ended";
+}
+
+export function deriveCompetitionPhase(input: {
+  applicationStartsAt: Date | string;
+  applicationEndsAt: Date | string;
+  votingStartsAt: Date | string;
+  votingEndsAt: Date | string;
+  lifecycle: CompetitionLifecycle;
+  isShowcase?: boolean;
+  now?: Date;
+}): CompetitionPhase {
+  if (input.isShowcase) return "showcase";
+  if (input.lifecycle === "ARCHIVED") return "archived";
+  if (input.lifecycle === "COMPLETED") return "completed";
+  if (input.lifecycle === "CLOSING") return "closing";
+  const now = input.now ?? new Date();
+  if (input.lifecycle === "VOTING_OPEN") return now <= new Date(input.votingEndsAt) ? "voting_open" : "closing";
+  if (now < new Date(input.applicationStartsAt)) return "applications_upcoming";
+  if (now <= new Date(input.applicationEndsAt)) return "applications_open";
+  if (now >= new Date(input.votingEndsAt)) return "closing";
+  return "review";
+}
+
+export function canSubmitApplication(input: Parameters<typeof deriveCompetitionPhase>[0]) {
+  return input.lifecycle === "APPLICATIONS_OPEN" && deriveCompetitionPhase(input) === "applications_open";
+}
+
+export function canAcceptVote(input: Parameters<typeof deriveCompetitionPhase>[0]) {
+  return input.lifecycle === "VOTING_OPEN" && deriveCompetitionPhase(input) === "voting_open";
 }
 
 export function formatDateTime(value: Date | string) {

@@ -34,7 +34,13 @@ export const competitionSchema = z.object({
   title,
   description,
   rules: z.string().max(5000),
-  startsAt: z.coerce.date(),
-  endsAt: z.coerce.date(),
+  applicationStartsAt: z.coerce.date(),
+  applicationEndsAt: z.coerce.date(),
+  votingStartsAt: z.coerce.date(),
+  votingEndsAt: z.coerce.date(),
   maxEntriesPerParticipant: z.union([z.coerce.number().int().positive().max(100), z.literal("")]).optional(),
-}).refine((v) => v.startsAt < v.endsAt, { message: "End time must be after start time." });
+}).superRefine((value, ctx) => {
+  if (!(value.applicationStartsAt < value.applicationEndsAt)) ctx.addIssue({ code: "custom", path: ["applicationEndsAt"], message: "Application end must be after its start." });
+  if (!(value.applicationEndsAt <= value.votingStartsAt)) ctx.addIssue({ code: "custom", path: ["votingStartsAt"], message: "Voting must start after applications close." });
+  if (!(value.votingStartsAt < value.votingEndsAt)) ctx.addIssue({ code: "custom", path: ["votingEndsAt"], message: "Voting end must be after its start." });
+});

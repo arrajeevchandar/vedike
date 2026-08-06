@@ -10,6 +10,7 @@ import {
 } from "@/lib/phonepe";
 import { redactProviderPayload } from "@/lib/security";
 import { VOTE_PRICE_PAISE } from "@/lib/domain";
+import { votingWindowOpen } from "@/lib/competition-phase";
 
 type ProviderOrder = {
   orderId: string;
@@ -125,8 +126,8 @@ export async function creditCompletedOrder(
     if (!submission) throw new Error("Submission missing.");
 
     if (
-      competition.lifecycle === "COMPLETED" ||
-      submission.state === "DISQUALIFIED"
+      !votingWindowOpen(competition) ||
+      submission.state !== "VISIBLE"
     ) {
       const refundId = order.refundId ?? `R-${order.merchantOrderId}`.slice(0, 63);
       const [claimed] = await tx

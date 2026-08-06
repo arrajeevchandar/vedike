@@ -1,6 +1,6 @@
 export type PublicationState = "DRAFT" | "PUBLISHED" | "ARCHIVED";
-export type CompetitionLifecycle = "PUBLISHED" | "CLOSING" | "COMPLETED" | "ARCHIVED";
-export type SubmissionState = "VISIBLE" | "HIDDEN" | "DISQUALIFIED" | "ARCHIVED";
+export type CompetitionLifecycle = "APPLICATIONS_OPEN" | "VOTING_OPEN" | "CLOSING" | "COMPLETED" | "ARCHIVED";
+export type SubmissionState = "PENDING_REVIEW" | "VISIBLE" | "HIDDEN" | "DISQUALIFIED" | "ARCHIVED";
 export type PaymentState =
   | "CREATED"
   | "PENDING"
@@ -11,6 +11,7 @@ export type PaymentState =
   | "REFUNDED"
   | "REVIEW_REQUIRED";
 export type DisplayStatus = "live" | "upcoming" | "ended" | "completed" | "showcase";
+export type CompetitionPhase = "applications_upcoming" | "applications_open" | "review" | "voting_open" | "closing" | "completed" | "archived" | "showcase";
 
 export interface PublicEvent {
   id: string;
@@ -41,6 +42,11 @@ export interface PublicCompetition {
   bannerUrl?: string | null;
   startsAt: string;
   endsAt: string;
+  applicationStartsAt?: string;
+  applicationEndsAt?: string;
+  votingStartsAt?: string;
+  votingEndsAt?: string;
+  phase?: CompetitionPhase;
   status: DisplayStatus;
   submissionCount: number;
   voteCount: number;
