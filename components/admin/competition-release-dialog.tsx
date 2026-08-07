@@ -5,7 +5,7 @@ import { openVotingAction } from "@/app/admin/actions";
 
 type Entry = { id: string; name: string; description: string };
 
-export function CompetitionReleaseDialog({ competitionId, competitionTitle, entries }: { competitionId: string; competitionTitle: string; entries: Entry[] }) {
+export function CompetitionReleaseDialog({ competitionId, competitionTitle, entries, visibleEntryCount }: { competitionId: string; competitionTitle: string; entries: Entry[]; visibleEntryCount: number }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const dialogRef = useRef<HTMLElement>(null);
@@ -41,6 +41,10 @@ export function CompetitionReleaseDialog({ competitionId, competitionTitle, entr
               </label>)}
             </div>
             <button className="btn btn-primary" disabled={!selected.size} style={{ width: "100%", marginTop: 18 }}>Release {selected.size || ""} {selected.size === 1 ? "entry" : "entries"} & open voting</button>
+          </form> : visibleEntryCount ? <form action={openVotingAction}>
+            <input type="hidden" name="id" value={competitionId} />
+            <div className="empty">{visibleEntryCount} {visibleEntryCount === 1 ? "entry is" : "entries are"} already released and ready for public voting.</div>
+            <button className="btn btn-primary" style={{ width: "100%", marginTop: 18 }}>Open public voting</button>
           </form> : <div className="empty">No pending entries are ready to release yet.</div>}
         </section>
       </div>}

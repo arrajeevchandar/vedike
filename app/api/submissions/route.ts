@@ -177,6 +177,9 @@ export async function POST(request: Request) {
             description: parsed.data.description,
             imageUrl: blob.url,
             imageKey: blob.pathname,
+            // Keep entries private even if an older database migration still
+            // has the legacy VISIBLE default configured.
+            state: "PENDING_REVIEW",
             tile: "linear-gradient(140deg,#3B0A12,#8a1b2a)",
             glyph: "ಹೊ",
           })

@@ -93,6 +93,7 @@ export default async function AdminCompetitionsPage() {
                 competitionId={competition.id}
                 competitionTitle={competition.title}
                 entries={data.submissions.filter((submission) => submission.competitionId === competition.id && "state" in submission && submission.state === "PENDING_REVIEW").map((submission) => ({ id: submission.id, name: "participantName" in submission ? submission.participantName : submission.name, description: submission.description }))}
+                visibleEntryCount={data.submissions.filter((submission) => submission.competitionId === competition.id && "state" in submission && submission.state === "VISIBLE").length}
               />
             )}
             {!competition.isShowcase && competition.lifecycle === "APPLICATIONS_OPEN" && (

@@ -547,7 +547,6 @@ export async function openVotingAction(form: FormData) {
   await assertTrustedOrigin();
   const id = String(form.get("id") ?? "");
   const submissionIds = form.getAll("submissionIds").map(String).filter(Boolean);
-  if (!submissionIds.length) validationError("Select at least one entry before opening voting.");
   const db = ensureDb();
   await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${id}, 0))`);
@@ -556,9 +555,14 @@ export async function openVotingAction(form: FormData) {
     if (!competition || competition.isShowcase || competition.lifecycle !== "APPLICATIONS_OPEN" || now < competition.applicationStartsAt || now >= competition.votingEndsAt) {
       validationError("This competition cannot open voting now.");
     }
-    const eligible = await tx.select({ id: submissions.id }).from(submissions).where(and(eq(submissions.competitionId, id), eq(submissions.state, "PENDING_REVIEW"), inArray(submissions.id, submissionIds)));
-    if (eligible.length !== submissionIds.length) validationError("Only pending entries from this competition can be released.");
-    await tx.update(submissions).set({ state: "VISIBLE", updatedAt: now }).where(and(eq(submissions.competitionId, id), inArray(submissions.id, submissionIds), eq(submissions.state, "PENDING_REVIEW")));
+    if (submissionIds.length) {
+      const eligible = await tx.select({ id: submissions.id }).from(submissions).where(and(eq(submissions.competitionId, id), eq(submissions.state, "PENDING_REVIEW"), inArray(submissions.id, submissionIds)));
+      if (eligible.length !== submissionIds.length) validationError("Only pending entries from this competition can be released.");
+      await tx.update(submissions).set({ state: "VISIBLE", updatedAt: now }).where(and(eq(submissions.competitionId, id), inArray(submissions.id, submissionIds), eq(submissions.state, "PENDING_REVIEW")));
+    } else {
+      const [visibleEntry] = await tx.select({ id: submissions.id }).from(submissions).where(and(eq(submissions.competitionId, id), eq(submissions.state, "VISIBLE"))).limit(1);
+      if (!visibleEntry) validationError("Release at least one entry before opening voting.");
+    }
     await tx.update(competitions).set({ lifecycle: "VOTING_OPEN", votingOpenedAt: now, updatedAt: now }).where(and(eq(competitions.id, id), eq(competitions.lifecycle, "APPLICATIONS_OPEN")));
     await tx.insert(adminAuditLog).values({ action: "OPEN_VOTING_AND_RELEASE_ENTRIES", entityType: "competition", entityId: id, metadata: { releasedSubmissionCount: submissionIds.length, openedEarly: now < competition.votingStartsAt } });
   });
