@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     await assertTrustedOrigin();
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const limited = await checkRateLimit("submission", ip, 5, "1 h");
+    const limited = await checkRateLimit("submission", ip, 100, "1 h");
     if (!limited.success) {
       return Response.json({ error: "Too many submissions. Please try later." }, { status: 429 });
     }
