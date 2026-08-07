@@ -78,14 +78,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .phase-banner { margin-top: 18px; padding: 16px 20px; border-radius: 18px; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; background: linear-gradient(115deg, rgba(242,183,5,.12), rgba(124,28,43,.16)); }
 .phase-banner strong { color: var(--gold); font-size: 20px; }
 .phase-banner p { margin: 0 0 0 auto; font-size: 12px; line-height: 1.55; }
-.admin-release-backdrop { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 18px; background: rgba(3,1,2,.8); backdrop-filter: blur(10px); }
-.admin-release-dialog { width: min(620px,100%); max-height: min(760px,calc(100dvh - 36px)); overflow: auto; padding: 26px; border-radius: 24px; background: linear-gradient(165deg,#1c0e12,#120709); animation: vd-pop .35s ease both; }
+.admin-release-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 18px; background: rgba(3,1,2,.8); backdrop-filter: blur(10px); }
+.admin-release-dialog { position: relative; z-index: 1; width: min(620px,100%); max-height: min(760px,calc(100dvh - 36px)); overflow: auto; padding: 26px; border-radius: 24px; background: linear-gradient(165deg,#1c0e12,#120709); animation: vd-pop .35s ease both; }
 .admin-dialog-close { float: right; border: 0; background: transparent; color: var(--cream); font-size: 25px; line-height: 1; cursor: pointer; }
 .admin-release-list { display: grid; gap: 10px; margin-top: 18px; }
 .admin-release-entry { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 14px; border: 1px solid rgba(242,183,5,.2); border-radius: 14px; cursor: pointer; background: rgba(255,255,255,.025); }
 .admin-release-entry input { margin-top: 4px; accent-color: var(--gold); }
 .admin-release-entry b,.admin-release-entry small { display: block; }
 .admin-release-entry small { margin-top: 4px; color: var(--muted); line-height: 1.45; }
+.admin-release-summary { margin-top: 18px; padding: 24px; text-align: center; border: 1px dashed rgba(255,243,220,.2); border-radius: 18px; color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
