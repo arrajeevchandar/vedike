@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ["sharp", "@phonepe-pg/pg-sdk-node"],
+  // Sharp is a native module. Explicitly trace its optional platform packages so
+  // the Linux libvips binary is present in Vercel's submission function.
+  outputFileTracingIncludes: {
+    "/api/submissions": [
+      "./node_modules/sharp/**/*",
+      "./node_modules/@img/sharp-*/**/*",
+      "./node_modules/@img/sharp-libvips-*/**/*",
+    ],
+  },
   experimental: {
     serverActions: { bodySizeLimit: "4mb" },
   },
