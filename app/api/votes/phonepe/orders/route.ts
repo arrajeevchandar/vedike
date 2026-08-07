@@ -3,11 +3,8 @@ import { headers } from "next/headers";
 import { start } from "workflow/api";
 import { getDb, hasDatabase } from "@/db";
 import { competitions, events, submissions, voteOrders } from "@/db/schema";
-import {
-  deriveStatus,
-  normalizeIndianPhone,
-  VOTE_PRICE_PAISE,
-} from "@/lib/domain";
+import { normalizeIndianPhone, VOTE_PRICE_PAISE } from "@/lib/domain";
+import { votingWindowOpen } from "@/lib/competition-phase";
 import { createPhonePeOrder, hasPhonePeConfig } from "@/lib/phonepe";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { assertTrustedOrigin, encryptPii, hashIdentity } from "@/lib/security";
@@ -89,8 +86,7 @@ export async function POST(request: Request) {
         eligible.event.publicationState !== "PUBLISHED" ||
         eligible.submission.state !== "VISIBLE" ||
         eligible.competition.isShowcase ||
-        eligible.competition.lifecycle !== "PUBLISHED" ||
-        deriveStatus(eligible.competition) !== "live"
+        !votingWindowOpen(eligible.competition)
       ) {
         throw new Error("VOTING_CLOSED");
       }

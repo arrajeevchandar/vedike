@@ -14,10 +14,20 @@ function authKey() {
   return new TextEncoder().encode(secret ?? "savitri-foundation-development-auth-secret-change-me");
 }
 
+function adminPasswordHash() {
+  const configured = process.env.ADMIN_PASSWORD_HASH;
+  if (!configured?.startsWith("base64:")) return configured;
+  try {
+    return Buffer.from(configured.slice("base64:".length), "base64").toString("utf8");
+  } catch {
+    return undefined;
+  }
+}
+
 export async function verifyAdminCredentials(email: string, password: string) {
   const expectedEmail = process.env.ADMIN_EMAIL ?? "admin@savitrifoundation.in";
   if (email.trim().toLowerCase() !== expectedEmail.toLowerCase()) return false;
-  const hash = process.env.ADMIN_PASSWORD_HASH;
+  const hash = adminPasswordHash();
   if (!hash) return process.env.NODE_ENV !== "production" && password === "savitri-demo";
   return compare(password, hash);
 }

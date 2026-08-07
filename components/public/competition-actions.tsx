@@ -30,7 +30,8 @@ export function CompetitionActions({
   const dialogRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const router = useRouter();
-  const active = competition.status === "live" && !competition.isShowcase;
+  const applicationOpen = competition.phase === "applications_open" && !competition.isShowcase;
+  const votingOpen = competition.phase === "voting_open" && !competition.isShowcase;
 
   const close = () => {
     setMode(null);
@@ -157,7 +158,7 @@ export function CompetitionActions({
             color: "var(--gold)",
             borderColor: "rgba(242,183,5,.4)",
           }}
-          disabled={!active}
+          disabled={!votingOpen}
           onClick={(event) => open("vote", event.currentTarget)}
         >
           {competition.isShowcase ? "Showcase only" : "Vote · ₹2"}
@@ -165,10 +166,10 @@ export function CompetitionActions({
       ) : (
         <button
           className="btn btn-primary"
-          disabled={!active}
+          disabled={!applicationOpen}
           onClick={(event) => open("submit", event.currentTarget)}
         >
-          {competition.isShowcase ? "Showcase only" : "+ Submit Entry"}
+          {competition.isShowcase ? "Showcase only" : applicationOpen ? "+ Submit Entry" : "Applications unavailable"}
         </button>
       )}
 

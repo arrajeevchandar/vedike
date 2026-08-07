@@ -447,13 +447,17 @@ export function createSavitriScene(container: HTMLElement, options: SceneOptions
     greenMaterial.opacity = 0.6 * neonProgress;
     gridMaterial.opacity = 0.5 * neonProgress;
     streaks.forEach(({ mesh, curve, offset, speed }) => {
-      const at = (offset + time * speed) % 1;
-      const position = curve?.getPointAt?.(at);
-      const tangent = curve?.getTangentAt?.(at);
-      if (!position || !tangent) return;
-      mesh.position.copy(position).y += 0.3;
-      mesh.lookAt(position.clone().add(tangent));
-      mesh.material.opacity = 0.85 * neonProgress;
+      try {
+        const at = (offset + time * speed) % 1;
+        const position = curve?.getPointAt?.(at);
+        const tangent = curve?.getTangentAt?.(at);
+        if (!position || !tangent) return;
+        mesh.position.copy(position).y += 0.3;
+        mesh.lookAt(position.clone().add(tangent));
+        mesh.material.opacity = 0.85 * neonProgress;
+      } catch {
+        mesh.visible = false;
+      }
     });
     buntings.forEach(({ mesh, index }) => { mesh.rotation.z = Math.sin(time * 2.4 + index) * 0.16; });
     buntingMaterials.forEach((material) => { material.opacity = 0.85 * neonProgress; });

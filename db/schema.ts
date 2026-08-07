@@ -14,8 +14,8 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const publicationStateEnum = pgEnum("publication_state", ["DRAFT", "PUBLISHED", "ARCHIVED"]);
-export const competitionLifecycleEnum = pgEnum("competition_lifecycle", ["PUBLISHED", "CLOSING", "COMPLETED", "ARCHIVED"]);
-export const submissionStateEnum = pgEnum("submission_state", ["VISIBLE", "HIDDEN", "DISQUALIFIED", "ARCHIVED"]);
+export const competitionLifecycleEnum = pgEnum("competition_lifecycle", ["APPLICATIONS_OPEN", "VOTING_OPEN", "CLOSING", "COMPLETED", "ARCHIVED"]);
+export const submissionStateEnum = pgEnum("submission_state", ["PENDING_REVIEW", "VISIBLE", "HIDDEN", "DISQUALIFIED", "ARCHIVED"]);
 export const paymentStateEnum = pgEnum("payment_state", ["CREATED", "PENDING", "COMPLETED", "FAILED", "EXPIRED", "REFUND_PENDING", "REFUNDED", "REVIEW_REQUIRED"]);
 
 export const events = pgTable("events", {
@@ -47,15 +47,22 @@ export const competitions = pgTable("competitions", {
   bannerUrl: text("banner_url"),
   startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
   endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
-  lifecycle: competitionLifecycleEnum("lifecycle").notNull().default("PUBLISHED"),
+  applicationStartsAt: timestamp("application_starts_at", { withTimezone: true }).notNull(),
+  applicationEndsAt: timestamp("application_ends_at", { withTimezone: true }).notNull(),
+  votingStartsAt: timestamp("voting_starts_at", { withTimezone: true }).notNull(),
+  votingEndsAt: timestamp("voting_ends_at", { withTimezone: true }).notNull(),
+  lifecycle: competitionLifecycleEnum("lifecycle").notNull().default("APPLICATIONS_OPEN"),
   maxEntriesPerParticipant: integer("max_entries_per_participant").default(1),
   isShowcase: boolean("is_showcase").notNull().default(false),
   showcaseStatus: text("showcase_status"),
+  applicationsOpenedAt: timestamp("applications_opened_at", { withTimezone: true }),
+  votingOpenedAt: timestamp("voting_opened_at", { withTimezone: true }),
+  phaseWorkflowRunId: text("phase_workflow_run_id"),
   completionStartedAt: timestamp("completion_started_at", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [check("competition_date_order", sql`${t.endsAt} > ${t.startsAt}`), check("competition_entry_limit_positive", sql`${t.maxEntriesPerParticipant} is null or ${t.maxEntriesPerParticipant} > 0`), index("competitions_event_idx").on(t.eventId, t.startsAt)]);
+}, (t) => [check("competition_date_order", sql`${t.endsAt} > ${t.startsAt}`), check("competition_phase_date_order", sql`${t.applicationStartsAt} <= ${t.applicationEndsAt} and ${t.applicationEndsAt} <= ${t.votingStartsAt} and ${t.votingStartsAt} < ${t.votingEndsAt}`), check("competition_entry_limit_positive", sql`${t.maxEntriesPerParticipant} is null or ${t.maxEntriesPerParticipant} > 0`), index("competitions_event_idx").on(t.eventId, t.startsAt)]);
 
 export const submissions = pgTable("submissions", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -70,7 +77,7 @@ export const submissions = pgTable("submissions", {
   imageKey: text("image_key"),
   tile: text("tile").notNull(),
   glyph: text("glyph").notNull().default("ಹೊ"),
-  state: submissionStateEnum("state").notNull().default("VISIBLE"),
+  state: submissionStateEnum("state").notNull().default("PENDING_REVIEW"),
   paidVoteCount: integer("paid_vote_count").notNull().default(0),
   showcaseVoteCount: integer("showcase_vote_count").notNull().default(0),
   lastVoteReachedAt: timestamp("last_vote_reached_at", { withTimezone: true }),
