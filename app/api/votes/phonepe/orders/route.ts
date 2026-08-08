@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { start } from "workflow/api";
 import { getDb, hasDatabase } from "@/db";
 import { competitions, events, submissions, voteOrders } from "@/db/schema";
-import { normalizeIndianPhone, VOTE_PRICE_PAISE } from "@/lib/domain";
+import { MAX_SUCCESSFUL_VOTES_PER_PHONE_PER_COMPETITION, normalizeIndianPhone, VOTE_PRICE_PAISE } from "@/lib/domain";
 import { votingWindowOpen } from "@/lib/competition-phase";
 import { createPhonePeOrder, hasPhonePeConfig } from "@/lib/phonepe";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -101,6 +101,20 @@ export async function POST(request: Request) {
         !votingWindowOpen(eligible.competition)
       ) {
         throw new Error("VOTING_CLOSED");
+      }
+
+      const [successfulVotes] = await tx
+        .select({ count: sql<number>`count(*)` })
+        .from(voteOrders)
+        .where(
+          and(
+            eq(voteOrders.competitionId, eligible.competition.id),
+            eq(voteOrders.voterPhoneHash, phoneHash),
+            eq(voteOrders.state, "COMPLETED"),
+          ),
+        );
+      if (Number(successfulVotes?.count ?? 0) >= MAX_SUCCESSFUL_VOTES_PER_PHONE_PER_COMPETITION) {
+        throw new Error("VOTE_LIMIT_REACHED");
       }
 
       const [active] = await tx
@@ -268,6 +282,12 @@ export async function POST(request: Request) {
       return Response.json(
         { error: "Finish your current vote before starting another." },
         { status: 409 },
+      );
+    }
+    if (code === "VOTE_LIMIT_REACHED") {
+      return Response.json(
+        { error: "This phone number has reached the 10-vote limit for this competition." },
+        { status: 429 },
       );
     }
     if (code === "IDEMPOTENCY_MISMATCH") {

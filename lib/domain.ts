@@ -2,6 +2,7 @@ import type { CompetitionLifecycle, CompetitionPhase, DisplayStatus, Publication
 
 export const VOTE_PRICE_PAISE = 200;
 export const VOTE_PRICE_RUPEES = 2;
+export const MAX_SUCCESSFUL_VOTES_PER_PHONE_PER_COMPETITION = 10;
 export const INDIA_TIME_ZONE = "Asia/Kolkata";
 
 export function deriveStatus(input: {
