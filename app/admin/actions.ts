@@ -550,6 +550,13 @@ export async function publishCompetitionResultsAction(form: FormData) {
     .from(competitions)
     .where(eq(competitions.id, id))
     .limit(1);
+  if (competition?.lifecycle === "COMPLETED") {
+    revalidatePath("/competitions");
+    revalidatePath("/leaderboard");
+    revalidatePath("/admin/competitions");
+    revalidatePath("/admin/leaderboard");
+    return;
+  }
   if (!competition || competition.isShowcase || competition.lifecycle !== "CLOSING") {
     validationError("Only closed competitions can publish results.");
   }
