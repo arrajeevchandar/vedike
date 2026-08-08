@@ -1,6 +1,8 @@
 import { AdminPage } from "@/components/admin/admin-page";
 import {
   archiveCompetitionAction,
+  closeVotingAction,
+  publishCompetitionResultsAction,
   saveCompetitionAction,
 } from "@/app/admin/actions";
 import { getDashboardData } from "@/lib/data";
@@ -95,6 +97,22 @@ export default async function AdminCompetitionsPage() {
                 entries={data.submissions.filter((submission) => submission.competitionId === competition.id && "state" in submission && submission.state === "PENDING_REVIEW").map((submission) => ({ id: submission.id, name: "participantName" in submission ? submission.participantName : submission.name, description: submission.description }))}
                 visibleEntryCount={data.submissions.filter((submission) => submission.competitionId === competition.id && "state" in submission && submission.state === "VISIBLE").length}
               />
+            )}
+            {!competition.isShowcase && competition.lifecycle === "VOTING_OPEN" && (
+              <form action={closeVotingAction} style={{ marginTop: 14 }}>
+                <input type="hidden" name="id" value={competition.id} />
+                <button className="btn btn-secondary" style={{ padding: "8px 14px", color: "var(--gold)", borderColor: "rgba(242, 183, 5, .4)" }}>
+                  Close voting
+                </button>
+              </form>
+            )}
+            {!competition.isShowcase && competition.lifecycle === "CLOSING" && (
+              <form action={publishCompetitionResultsAction} style={{ marginTop: 14 }}>
+                <input type="hidden" name="id" value={competition.id} />
+                <button className="btn btn-primary" style={{ padding: "8px 14px" }}>
+                  Publish results
+                </button>
+              </form>
             )}
             {!competition.isShowcase && competition.lifecycle === "APPLICATIONS_OPEN" && (
               <details style={{ marginTop: 16 }}>
