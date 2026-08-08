@@ -11,7 +11,7 @@ import type { CompetitionDetail, PublicCompetition, PublicEvent, PublicSubmissio
 export async function getEvents(): Promise<PublicEvent[]> {
   if (!hasDatabase()) return showcaseEvents;
   const db = getDb();
-  const rows = await db.select().from(events).where(eq(events.publicationState, "PUBLISHED")).orderBy(asc(events.startsAt));
+  const rows = await db.select().from(events).where(inArray(events.publicationState, ["PUBLISHED", "COMPLETED"])).orderBy(asc(events.startsAt));
   const compRows = await db.select({ eventId: competitions.eventId }).from(competitions).where(and(inArray(competitions.eventId, rows.map((r) => r.id)), ne(competitions.lifecycle, "ARCHIVED")));
   return rows.map((row) => ({
     ...row,
@@ -27,7 +27,7 @@ export async function getEvent(slug: string) {
     return event ? { ...event, competitions: showcaseCompetitions.filter((item) => item.eventId === event.id) } : null;
   }
   const db = getDb();
-  const [event] = await db.select().from(events).where(and(eq(events.slug, slug), eq(events.publicationState, "PUBLISHED"))).limit(1);
+  const [event] = await db.select().from(events).where(and(eq(events.slug, slug), inArray(events.publicationState, ["PUBLISHED", "COMPLETED"]))).limit(1);
   if (!event) return null;
   const comps = await db.select().from(competitions).where(and(eq(competitions.eventId, event.id), ne(competitions.lifecycle, "ARCHIVED"))).orderBy(asc(competitions.startsAt));
   const decorated = await Promise.all(comps.map((c) => decorateCompetition(c, event)));
@@ -42,7 +42,7 @@ export async function getEvent(slug: string) {
 export async function getCompetitions(): Promise<PublicCompetition[]> {
   if (!hasDatabase()) return showcaseCompetitions;
   const db = getDb();
-  const rows = await db.select({ competition: competitions, event: events }).from(competitions).innerJoin(events, eq(competitions.eventId, events.id)).where(and(eq(events.publicationState, "PUBLISHED"), ne(competitions.lifecycle, "ARCHIVED"))).orderBy(asc(competitions.startsAt));
+  const rows = await db.select({ competition: competitions, event: events }).from(competitions).innerJoin(events, eq(competitions.eventId, events.id)).where(and(inArray(events.publicationState, ["PUBLISHED", "COMPLETED"]), ne(competitions.lifecycle, "ARCHIVED"))).orderBy(asc(competitions.startsAt));
   return Promise.all(rows.map(({ competition, event }) => decorateCompetition(competition, event)));
 }
 
@@ -68,7 +68,7 @@ async function decorateCompetition(c: typeof competitions.$inferSelect, event: t
 export async function getCompetition(slug: string): Promise<CompetitionDetail | null> {
   if (!hasDatabase()) return getShowcaseCompetition(slug);
   const db = getDb();
-  const [row] = await db.select({ competition: competitions, event: events }).from(competitions).innerJoin(events, eq(competitions.eventId, events.id)).where(and(eq(competitions.slug, slug), eq(events.publicationState, "PUBLISHED"), ne(competitions.lifecycle, "ARCHIVED"))).limit(1);
+  const [row] = await db.select({ competition: competitions, event: events }).from(competitions).innerJoin(events, eq(competitions.eventId, events.id)).where(and(eq(competitions.slug, slug), inArray(events.publicationState, ["PUBLISHED", "COMPLETED"]), ne(competitions.lifecycle, "ARCHIVED"))).limit(1);
   if (!row) return null;
   const c = await decorateCompetition(row.competition, row.event);
   const publicEntries = c.isShowcase || ["voting_open", "closing", "completed"].includes(c.phase ?? "");

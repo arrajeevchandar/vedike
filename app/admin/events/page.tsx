@@ -1,5 +1,5 @@
 import { AdminPage } from "@/components/admin/admin-page";
-import { archiveEventAction, saveEventAction } from "@/app/admin/actions";
+import { archiveEventAction, completeEventAction, saveEventAction } from "@/app/admin/actions";
 import { getDashboardData } from "@/lib/data";
 
 function toIstInput(value: Date | string) {
@@ -44,7 +44,12 @@ export default async function AdminEventsPage() {
                   {event.isShowcase ? "Showcase · read only" : `${new Date(event.startsAt).toLocaleString("en-IN")} → ${new Date(event.endsAt).toLocaleString("en-IN")}`}
                 </div>
               </div>
-              {!event.isShowcase && <form action={archiveEventAction}><input type="hidden" name="id" value={event.id} /><button className="btn btn-secondary" style={{ padding: "8px 14px", color: "#ff8a8f" }}>Archive</button></form>}
+              {!event.isShowcase && (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {("publicationState" in event && event.publicationState === "PUBLISHED") && <form action={completeEventAction}><input type="hidden" name="id" value={event.id} /><button className="btn btn-secondary" style={{ padding: "8px 14px", color: "var(--gold)", borderColor: "rgba(242, 183, 5, .4)" }}>Complete event</button></form>}
+                  <form action={archiveEventAction}><input type="hidden" name="id" value={event.id} /><button className="btn btn-secondary" style={{ padding: "8px 14px", color: "#ff8a8f" }}>Archive</button></form>
+                </div>
+              )}
             </div>
             {!event.isShowcase && (
               <details style={{ marginTop: 16 }}>

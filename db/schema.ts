@@ -13,7 +13,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-export const publicationStateEnum = pgEnum("publication_state", ["DRAFT", "PUBLISHED", "ARCHIVED"]);
+export const publicationStateEnum = pgEnum("publication_state", ["DRAFT", "PUBLISHED", "COMPLETED", "ARCHIVED"]);
 export const competitionLifecycleEnum = pgEnum("competition_lifecycle", ["APPLICATIONS_OPEN", "VOTING_OPEN", "CLOSING", "COMPLETED", "ARCHIVED"]);
 export const submissionStateEnum = pgEnum("submission_state", ["PENDING_REVIEW", "VISIBLE", "HIDDEN", "DISQUALIFIED", "ARCHIVED"]);
 export const paymentStateEnum = pgEnum("payment_state", ["CREATED", "PENDING", "COMPLETED", "FAILED", "EXPIRED", "REFUND_PENDING", "REFUNDED", "REVIEW_REQUIRED"]);

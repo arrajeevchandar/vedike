@@ -1,4 +1,4 @@
-export type PublicationState = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type PublicationState = "DRAFT" | "PUBLISHED" | "COMPLETED" | "ARCHIVED";
 export type CompetitionLifecycle = "APPLICATIONS_OPEN" | "VOTING_OPEN" | "CLOSING" | "COMPLETED" | "ARCHIVED";
 export type SubmissionState = "PENDING_REVIEW" | "VISIBLE" | "HIDDEN" | "DISQUALIFIED" | "ARCHIVED";
 export type PaymentState =

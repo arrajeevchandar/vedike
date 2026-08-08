@@ -188,6 +188,47 @@ export async function archiveEventAction(form: FormData) {
   revalidatePath("/admin/events");
 }
 
+export async function completeEventAction(form: FormData) {
+  await requireAdmin();
+  await assertTrustedOrigin();
+  const id = String(form.get("id") ?? "");
+  const db = ensureDb();
+  await db.transaction(async (tx) => {
+    const [event] = await tx.select().from(events).where(eq(events.id, id)).limit(1);
+    if (!event || event.isShowcase || event.publicationState === "ARCHIVED") {
+      validationError("This event cannot be completed.");
+    }
+    if (event.publicationState === "COMPLETED") return;
+    const [activeCompetition] = await tx
+      .select({ id: competitions.id })
+      .from(competitions)
+      .where(
+        and(
+          eq(competitions.eventId, id),
+          inArray(competitions.lifecycle, ["APPLICATIONS_OPEN", "VOTING_OPEN", "CLOSING"]),
+        ),
+      )
+      .limit(1);
+    if (activeCompetition) {
+      validationError("Complete or archive every competition before completing this event.");
+    }
+    await tx
+      .update(events)
+      .set({ publicationState: "COMPLETED", updatedAt: new Date() })
+      .where(eq(events.id, id));
+    await tx.insert(adminAuditLog).values({
+      action: "COMPLETE_EVENT",
+      entityType: "event",
+      entityId: id,
+    });
+  });
+  revalidatePath("/events");
+  revalidatePath("/competitions");
+  revalidatePath("/leaderboard");
+  revalidatePath("/admin/events");
+  revalidatePath("/admin/competitions");
+}
+
 export async function saveCompetitionAction(form: FormData) {
   await requireAdmin();
   await assertTrustedOrigin();
@@ -226,7 +267,7 @@ export async function saveCompetitionAction(form: FormData) {
     if (
       !event ||
       event.isShowcase ||
-      event.publicationState === "ARCHIVED" ||
+      event.publicationState !== "PUBLISHED" ||
       parsed.data.applicationStartsAt < event.startsAt ||
       parsed.data.votingEndsAt > event.endsAt
     ) {

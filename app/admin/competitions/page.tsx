@@ -32,7 +32,7 @@ function CompetitionFields({
   const realEvents = events.filter(
     (event) =>
       !event.isShowcase &&
-      (!("publicationState" in event) || event.publicationState !== "ARCHIVED"),
+      (!("publicationState" in event) || event.publicationState === "PUBLISHED"),
   );
   return (
     <>
@@ -63,7 +63,7 @@ export default async function AdminCompetitionsPage() {
   const canCreate = data.events.some(
     (event) =>
       !event.isShowcase &&
-      (!("publicationState" in event) || event.publicationState !== "ARCHIVED"),
+      (!("publicationState" in event) || event.publicationState === "PUBLISHED"),
   );
   return (
     <AdminPage>

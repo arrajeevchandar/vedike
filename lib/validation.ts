@@ -25,7 +25,7 @@ export const eventSchema = z.object({
   description,
   startsAt: z.coerce.date(),
   endsAt: z.coerce.date(),
-  publicationState: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("PUBLISHED"),
+  publicationState: z.enum(["DRAFT", "PUBLISHED", "COMPLETED", "ARCHIVED"]).default("PUBLISHED"),
 }).refine((v) => v.startsAt < v.endsAt, { message: "End time must be after start time." });
 
 export const competitionSchema = z.object({
