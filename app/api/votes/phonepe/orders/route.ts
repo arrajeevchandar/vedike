@@ -13,6 +13,18 @@ import { reconcilePaymentWorkflow } from "@/workflows/reconcile-payment";
 
 export const runtime = "nodejs";
 
+function phonePeExpiry(value: unknown) {
+  if (value instanceof Date) return value;
+  if (typeof value === "number") {
+    return new Date(value < 10_000_000_000 ? value * 1000 : value);
+  }
+  const parsed = new Date(String(value));
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("PhonePe returned an invalid checkout expiry.");
+  }
+  return parsed;
+}
+
 export async function POST(request: Request) {
   try {
     if (!hasDatabase() || !hasPhonePeConfig()) {
@@ -199,7 +211,7 @@ export async function POST(request: Request) {
         checkoutUrl: phonePe.redirectUrl,
         state: "PENDING",
         failureCode: null,
-        expiresAt: new Date(phonePe.expireAt * 1000),
+        expiresAt: phonePeExpiry(phonePe.expireAt),
         updatedAt: new Date(),
       })
       .where(eq(voteOrders.id, local.order.id));

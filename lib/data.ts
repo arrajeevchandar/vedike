@@ -49,7 +49,8 @@ export async function getCompetitions(): Promise<PublicCompetition[]> {
 async function decorateCompetition(c: typeof competitions.$inferSelect, event: typeof events.$inferSelect): Promise<PublicCompetition> {
   const db = getDb();
   const phase = publicCompetitionPhase(c);
-  const publicResults = c.isShowcase || ["voting_open", "closing", "completed"].includes(phase);
+  const publicEntries = c.isShowcase || ["voting_open", "closing", "completed"].includes(phase);
+  const publicResults = c.isShowcase || phase === "completed";
   const subs = await db.select({ paid: submissions.paidVoteCount, showcase: submissions.showcaseVoteCount }).from(submissions).where(and(eq(submissions.competitionId, c.id), eq(submissions.state, "VISIBLE")));
   return {
     ...c,
@@ -59,7 +60,7 @@ async function decorateCompetition(c: typeof competitions.$inferSelect, event: t
     votingStartsAt: c.votingStartsAt.toISOString(), votingEndsAt: c.votingEndsAt.toISOString(),
     phase,
     status: c.isShowcase ? "showcase" : deriveStatus(c),
-    submissionCount: publicResults ? subs.length : 0,
+    submissionCount: publicEntries ? subs.length : 0,
     voteCount: publicResults ? subs.reduce((sum, s) => sum + (c.isShowcase ? s.showcase : s.paid), 0) : 0,
   };
 }
@@ -70,10 +71,11 @@ export async function getCompetition(slug: string): Promise<CompetitionDetail | 
   const [row] = await db.select({ competition: competitions, event: events }).from(competitions).innerJoin(events, eq(competitions.eventId, events.id)).where(and(eq(competitions.slug, slug), eq(events.publicationState, "PUBLISHED"), ne(competitions.lifecycle, "ARCHIVED"))).limit(1);
   if (!row) return null;
   const c = await decorateCompetition(row.competition, row.event);
-  const publicResults = c.isShowcase || ["voting_open", "closing", "completed"].includes(c.phase ?? "");
-  const subRows = publicResults ? await db.select().from(submissions).where(and(eq(submissions.competitionId, c.id), eq(submissions.state, "VISIBLE"))).orderBy(desc(submissions.createdAt)) : [];
+  const publicEntries = c.isShowcase || ["voting_open", "closing", "completed"].includes(c.phase ?? "");
+  const publicResults = c.isShowcase || c.phase === "completed";
+  const subRows = publicEntries ? await db.select().from(submissions).where(and(eq(submissions.competitionId, c.id), eq(submissions.state, "VISIBLE"))).orderBy(desc(submissions.createdAt)) : [];
   const publicSubs: PublicSubmission[] = subRows.map((s) => ({ id: s.id, competitionId: s.competitionId, name: s.participantName, description: s.description, imageUrl: s.imageUrl, tile: s.tile, glyph: s.glyph, voteCount: c.isShowcase ? s.showcaseVoteCount : s.paidVoteCount, createdAt: s.createdAt.toISOString() }));
-  const sorted = rankSubmissions(subRows.map((s) => ({ ...s, voteCount: c.isShowcase ? s.showcaseVoteCount : s.paidVoteCount })));
+  const sorted = publicResults ? rankSubmissions(subRows.map((s) => ({ ...s, voteCount: c.isShowcase ? s.showcaseVoteCount : s.paidVoteCount }))) : [];
   const max = Math.max(1, ...sorted.map((s) => s.voteCount));
   const leaderboard = sorted.map((s, index) => ({ id: s.id, competitionId: s.competitionId, name: s.participantName, description: s.description, imageUrl: s.imageUrl, tile: s.tile, glyph: s.glyph, voteCount: s.voteCount, createdAt: s.createdAt.toISOString(), rank: index + 1, percentage: Math.round((s.voteCount / max) * 100) }));
   const winnerRows = c.phase === "completed" || c.isShowcase ? await db.select({ winner: competitionWinners, submission: submissions }).from(competitionWinners).innerJoin(submissions, eq(competitionWinners.submissionId, submissions.id)).where(eq(competitionWinners.competitionId, c.id)).orderBy(asc(competitionWinners.rank)) : [];

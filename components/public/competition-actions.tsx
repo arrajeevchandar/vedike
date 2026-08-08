@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import type { CompetitionDetail, PublicSubmission } from "@/lib/types";
 
 declare global {
@@ -173,7 +174,7 @@ export function CompetitionActions({
         </button>
       )}
 
-      {mode && (
+      {mode && createPortal(
         <div
           onMouseDown={(event) => event.target === event.currentTarget && close()}
           style={{
@@ -269,7 +270,7 @@ export function CompetitionActions({
             )}
           </div>
         </div>
-      )}
+      , document.body)}
     </>
   );
 }

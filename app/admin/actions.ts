@@ -513,7 +513,7 @@ export async function deleteUnpaidSubmissionAction(form: FormData) {
   revalidatePath("/admin/submissions");
 }
 
-export async function completeCompetitionAction(form: FormData) {
+export async function closeVotingAction(form: FormData) {
   await requireAdmin();
   await assertTrustedOrigin();
   const id = String(form.get("id") ?? "");
@@ -530,15 +530,43 @@ export async function completeCompetitionAction(form: FormData) {
     )
     .returning({ id: competitions.id });
   if (!claimed) return;
-  const run = await start(finalizeCompetitionWorkflow, [id]);
   await db.insert(adminAuditLog).values({
-    action: "START_COMPETITION_FINALIZATION",
+    action: "CLOSE_VOTING_MANUALLY",
+    entityType: "competition",
+    entityId: id,
+  });
+  revalidatePath("/competitions");
+  revalidatePath("/leaderboard");
+  revalidatePath("/admin/leaderboard");
+}
+
+export async function publishCompetitionResultsAction(form: FormData) {
+  await requireAdmin();
+  await assertTrustedOrigin();
+  const id = String(form.get("id") ?? "");
+  const db = ensureDb();
+  const [competition] = await db
+    .select({ lifecycle: competitions.lifecycle, isShowcase: competitions.isShowcase })
+    .from(competitions)
+    .where(eq(competitions.id, id))
+    .limit(1);
+  if (!competition || competition.isShowcase || competition.lifecycle !== "CLOSING") {
+    validationError("Only closed competitions can publish results.");
+  }
+  const run = await start(finalizeCompetitionWorkflow, [id]);
+  await db
+    .update(competitions)
+    .set({ completionStartedAt: new Date(), updatedAt: new Date() })
+    .where(eq(competitions.id, id));
+  await db.insert(adminAuditLog).values({
+    action: "PUBLISH_COMPETITION_RESULTS",
     entityType: "competition",
     entityId: id,
     metadata: { runId: run.runId },
   });
   revalidatePath("/competitions");
   revalidatePath("/leaderboard");
+  revalidatePath("/admin/competitions");
   revalidatePath("/admin/leaderboard");
 }
 
