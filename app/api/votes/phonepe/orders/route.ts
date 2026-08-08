@@ -104,7 +104,7 @@ export async function POST(request: Request) {
       }
 
       const [active] = await tx
-        .select({ id: voteOrders.id })
+        .select({ id: voteOrders.id, expiresAt: voteOrders.expiresAt })
         .from(voteOrders)
         .where(
           and(
@@ -113,7 +113,21 @@ export async function POST(request: Request) {
           ),
         )
         .limit(1);
-      if (active) throw new Error("ACTIVE_ORDER");
+      if (active) {
+        if (active.expiresAt <= new Date()) {
+          await tx
+            .update(voteOrders)
+            .set({ state: "EXPIRED", updatedAt: new Date() })
+            .where(
+              and(
+                eq(voteOrders.id, active.id),
+                inArray(voteOrders.state, ["CREATED", "PENDING"]),
+              ),
+            );
+        } else {
+          throw new Error("ACTIVE_ORDER");
+        }
+      }
 
       const orderId = crypto.randomUUID();
       const merchantOrderId = `VDK-${orderId.replaceAll("-", "")}`.slice(0, 63);
