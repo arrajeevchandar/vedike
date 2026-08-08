@@ -14,6 +14,7 @@ export function deriveStatus(input: {
   now?: Date;
 }): DisplayStatus {
   if (input.isShowcase) return "showcase";
+  if (input.publicationState === "COMPLETED") return "completed";
   if (input.lifecycle === "COMPLETED") return "completed";
   const now = input.now ?? new Date();
   const start = new Date(input.startsAt);
