@@ -9,7 +9,7 @@ import { SiteSplash } from "./site-splash";
 
 const chapters = [
   {
-    kicker: "ನಮಸ್ಕಾರ ಬೆಂಗಳೂರು",
+    kicker: "ನಮಸ್ಕಾರ ಕರ್ನಾಟಕ",
     title: <><span data-word>Where</span> <span data-word>Culture</span> <span data-word className={styles.shimmer}>Meets</span> <span data-word>Community</span></>,
     copy: "A modern digital space for Kannada communities to celebrate, compete, participate, and vote together.",
   },
@@ -19,8 +19,8 @@ const chapters = [
     copy: "Inspired by the spirit of Karnataka, built for today’s connected communities.",
   },
   {
-    kicker: "ನಮ್ಮ ಬೆಂಗಳೂರು",
-    title: <><span data-word>Namma</span> <span data-word className={styles.neon}>Bengaluru</span> <span data-word>Energy</span></>,
+    kicker: "ನಮ್ಮ ಕರ್ನಾಟಕ",
+    title: <><span data-word>Namma</span> <span data-word className={styles.neon}>Karnataka</span> <span data-word>Energy</span></>,
     copy: "From cultural gatherings to friendly competitions, every celebration gets a digital stage.",
   },
   {
