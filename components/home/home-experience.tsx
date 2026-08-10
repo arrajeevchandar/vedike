@@ -157,20 +157,28 @@ export function HomeExperience({ showSplash }: { showSplash: boolean }) {
             <Link href="/events" onMouseMove={magnet} onMouseLeave={magnetLeave} className={styles.primary}>View Events</Link>
             <Link href="/admin/login" onMouseMove={magnet} onMouseLeave={magnetLeave} className={styles.secondary}>Admin Login</Link>
           </div>
-          <div className={styles.collage}>
-            <div className={styles.confetti} aria-hidden="true"><i /><i /><i /><i /><i /></div>
-            <article className={`${styles.previewCard} ${styles.eventPreview}`}>
-              <div className={styles.eventBanner}><span className="kannada">ಸ</span><b>● LIVE</b></div>
-              <div><strong>Kannada Sangama 2026</strong><small>Jul 1 – Jul 20 · 3 competitions</small><em>View Event →</em></div>
+          <div className={styles.communityPulse}>
+            <div className={styles.pulseLine} aria-hidden="true" />
+            <article className={`${styles.pulseMoment} ${styles.pulseDiscover}`}>
+              <span className={styles.pulseNumber}>01</span>
+              <span className={`${styles.pulseGlyph} kannada`}>ಉ</span>
+              <div><small>Discover</small><strong>Find your stage</strong><p>Festivals, local talent, and moments worth showing up for.</p></div>
             </article>
-            <article className={`${styles.previewCard} ${styles.votePreview}`}>
-              <label>Cast Your Vote</label><div><span className="kannada">ರ</span><p><b>Ananya Hegde</b><small>Rangoli Art Challenge</small></p></div><i /><i /><button>Pay ₹2 &amp; Vote</button>
+            <div className={styles.pulseCore} aria-hidden="true"><span className="kannada">ಸ</span><i /><i /><i /></div>
+            <article className={`${styles.pulseMoment} ${styles.pulseParticipate}`}>
+              <span className={styles.pulseNumber}>02</span>
+              <span className={`${styles.pulseGlyph} kannada`}>ಕ</span>
+              <div><small>Participate</small><strong>Share your craft</strong><p>Turn a performance, story, or skill into a community moment.</p></div>
             </article>
-            <article className={`${styles.previewCard} ${styles.podiumPreview}`}>
-              <label>Winner Reveal</label><div><span>🥈<i /></span><span>👑<i /></span><span>🥉<i /></span></div>
+            <article className={`${styles.pulseMoment} ${styles.pulseCelebrate}`}>
+              <span className={styles.pulseNumber}>03</span>
+              <span className={`${styles.pulseGlyph} kannada`}>ಹ</span>
+              <div><small>Celebrate</small><strong>Cheer together</strong><p>Every vote, every entry, every win belongs to the community.</p></div>
             </article>
-            <article className={`${styles.previewCard} ${styles.adminPreview}`}>
-              <label>Admin Dashboard</label><div className={styles.stats}><span><b>1,284</b><small>Total votes</small></span><span><b>₹2,568</b><small>Revenue</small></span></div><div className={styles.chart}><i /><i /><i /><i /><i /></div>
+            <article className={`${styles.pulseMoment} ${styles.pulseConnect}`}>
+              <span className={styles.pulseNumber}>04</span>
+              <span className={`${styles.pulseGlyph} kannada`}>ನ</span>
+              <div><small>Connect</small><strong>Keep the spirit moving</strong><p>A shared home for Karnataka&apos;s creativity, energy, and pride.</p></div>
             </article>
           </div>
         </div>
