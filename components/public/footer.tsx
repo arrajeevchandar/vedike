@@ -1,2 +1,21 @@
 import Link from "next/link";
-export function Footer(){ return <footer style={{borderTop:"1px solid var(--line)",padding:"34px 20px",background:"#080406"}}><div className="shell" style={{display:"flex",gap:20,justifyContent:"space-between",flexWrap:"wrap",color:"var(--muted)",fontSize:13}}><span><b className="display" style={{color:"var(--cream)"}}>SAVITRI FOUNDATION</b> · Where culture meets community.</span><span style={{display:"flex",gap:18}}><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/refund-policy">Refunds</Link></span></div></footer> }
+import { BrandLogo } from "@/components/brand/brand-logo";
+
+export function Footer() {
+  return (
+    <footer style={{ borderTop: "1px solid var(--line)", padding: "34px 20px", background: "#080406" }}>
+      <div className="shell" style={{ display: "flex", gap: 20, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", color: "var(--muted)", fontSize: 13 }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <BrandLogo size={37} />
+          <span>Where culture meets community.</span>
+        </span>
+        <span style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
+          <Link href="/support">Support</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/refund-policy">Refunds</Link>
+        </span>
+      </div>
+    </footer>
+  );
+}

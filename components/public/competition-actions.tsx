@@ -4,6 +4,7 @@ import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import { BrandLoader } from "@/components/brand/brand-logo";
 import type { CompetitionDetail, PublicSubmission } from "@/lib/types";
 
 declare global {
@@ -241,7 +242,7 @@ export function CompetitionActions({
                 <label className="form-label">Description</label>
                 <textarea className="field" name="description" rows={4} required />
                 <button className="btn btn-primary" disabled={busy} style={{ width: "100%", marginTop: 18 }}>
-                  {busy ? "Publishing…" : "Submit Entry"}
+                  {busy ? <BrandLoader mode="inline" label="Publishing…" /> : "Submit Entry"}
                 </button>
               </form>
             ) : (
@@ -251,7 +252,7 @@ export function CompetitionActions({
                 <label className="form-label">Your phone</label>
                 <input className="field" name="voterPhone" inputMode="tel" required />
                 <button className="btn btn-primary" disabled={busy} style={{ width: "100%", marginTop: 18 }}>
-                  {busy ? "Please wait…" : "Pay ₹2 & Vote"}
+                  {busy ? <BrandLoader mode="inline" label="Please wait…" /> : "Pay ₹2 & Vote"}
                 </button>
               </form>
             )}

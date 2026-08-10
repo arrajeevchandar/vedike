@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { BrandLoader, BrandLogo } from "@/components/brand/brand-logo";
 import styles from "./site-splash.module.css";
 
 const SPLASH_COOKIE = "savitri_foundation_splash_seen";
@@ -50,12 +51,9 @@ export function SiteSplash({ initialVisible }: { initialVisible: boolean }) {
       <div className={styles.content}>
         <div className={styles.eyebrow}><span />A cultural digital stage</div>
         <p className={styles.creation}>SRI <span className="kannada">ವಸುದಾ</span> CREATION</p>
-        <div className={styles.brandLockup}>
-          <span className={`kannada ${styles.glyph}`}>ಸ</span>
-          <div><strong>SAVITRI</strong><small>FOUNDATION</small></div>
-        </div>
+        <BrandLogo size={94} className={styles.brandLockup} />
         <p className={styles.tagline}>Where culture meets community.</p>
-        <div className={styles.loader} aria-hidden="true"><i /><span>Opening the stage</span></div>
+        <div className={styles.loader}><BrandLoader mode="inline" label="Opening the stage" /></div>
         <button type="button" className={styles.skip} onClick={finish}>Skip intro</button>
       </div>
       <div className={styles.wipe} aria-hidden="true" />

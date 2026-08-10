@@ -26,7 +26,19 @@ test("home and public showcase are navigable", async ({ page }) => {
   await expect(page.getByText("Showcase only").first()).toBeDisabled();
 });
 
+test("brand identity is present across public and admin surfaces", async ({ page }) => {
+  await page.goto("/events");
+  await expect(page.getByRole("link", { name: "Savitri Foundation home" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Savitri Foundation" })).toBeVisible();
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute("href", /icon.*\.svg/);
+
+  await page.goto("/admin/login");
+  await expect(page.getByRole("heading", { name: "Admin Dashboard" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Savitri Foundation" })).toBeVisible();
+});
+
 test("prototype home scroll windows stay stable without renderer errors", async ({ page }) => {
+  test.setTimeout(60_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {

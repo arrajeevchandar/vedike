@@ -1,8 +1,6 @@
 .nav { position:sticky; top:0; z-index:50; min-height:68px; display:flex; align-items:center; justify-content:space-between; padding:13px 26px; background:rgba(11,6,8,.8); backdrop-filter:blur(15px); border-bottom:1px solid rgba(242,183,5,.13); }
 .overlay { position:fixed; left:0; right:0; background:linear-gradient(rgba(7,4,8,.78), transparent); border:0; }
-.brand { display:flex; align-items:center; gap:9px; text-decoration:none; letter-spacing:.07em; }
-.brand span { color:var(--gold); font-size:26px; line-height:1; text-shadow:0 0 18px rgba(242,183,5,.5); }
-.brand strong { font-size:19px; }
+.brand { display:flex; align-items:center; min-width:0; text-decoration:none; }
 .links { display:flex; align-items:center; gap:5px; }
 .links a { color:rgba(255,243,220,.76); text-decoration:none; padding:9px 12px; border-radius:999px; font-size:14px; font-weight:600; transition:.2s; }
 .links a:hover { color:var(--gold); background:rgba(242,183,5,.08); }

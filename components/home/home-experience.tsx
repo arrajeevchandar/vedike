@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { createSavitriScene } from "./three-scene";
 import styles from "./home.module.css";
 import responsiveStyles from "./home-responsive.module.css";
@@ -34,7 +35,9 @@ function HomeNavigation() {
   const [open, setOpen] = useState(false);
   return (
     <nav className={`${styles.nav} ${responsiveStyles.nav}`} aria-label="Primary navigation">
-      <Link href="/" className={`${styles.brand} ${responsiveStyles.brand}`}><span className="kannada">ಸ</span><strong>SAVITRI FOUNDATION</strong></Link>
+      <Link href="/" className={`${styles.brand} ${responsiveStyles.brand}`} aria-label="Savitri Foundation home">
+        <BrandLogo size={40} decorative hideWordmarkOnMobile />
+      </Link>
       <button type="button" className={responsiveStyles.menuButton} onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-controls="home-navigation-menu">{open ? "Close" : "Menu"}</button>
       <div id="home-navigation-menu" className={`${styles.navLinks} ${responsiveStyles.navLinks} ${open ? responsiveStyles.navOpen : ""}`}>
         <Link href="/events" onClick={() => setOpen(false)}>Events</Link>
@@ -165,7 +168,7 @@ export function HomeExperience({ showSplash }: { showSplash: boolean }) {
               <span className={`${styles.pulseGlyph} kannada`}>ಉ</span>
               <div><small>Discover</small><strong>Find your stage</strong><p>Festivals, local talent, and moments worth showing up for.</p></div>
             </article>
-            <div className={styles.pulseCore} aria-hidden="true"><span className="kannada">ಸ</span><i /><i /><i /></div>
+            <div className={styles.pulseCore} aria-hidden="true"><BrandLogo variant="pulse" size={98} decorative className={styles.pulseLogo} /><i /><i /><i /></div>
             <article className={`${styles.pulseMoment} ${styles.pulseParticipate}`}>
               <span className={styles.pulseNumber}>02</span>
               <span className={`${styles.pulseGlyph} kannada`}>ಕ</span>
@@ -184,7 +187,7 @@ export function HomeExperience({ showSplash }: { showSplash: boolean }) {
           </div>
         </div>
         <footer className={styles.footer}>
-          <div><span className="kannada">ಸ</span><b>SAVITRI FOUNDATION</b><small>Namma stage. Namma pride.</small></div>
+          <div><BrandLogo size={38} /><small>Namma stage. Namma pride.</small></div>
           <nav><Link href="/events">Events</Link><Link href="/leaderboard">Leaderboard</Link><Link href="/admin/login">Admin</Link></nav>
         </footer>
       </section>
