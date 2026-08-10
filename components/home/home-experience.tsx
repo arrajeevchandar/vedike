@@ -187,7 +187,7 @@ export function HomeExperience({ showSplash }: { showSplash: boolean }) {
           </div>
         </div>
         <footer className={styles.footer}>
-          <div><BrandLogo size={38} /><small>Namma stage. Namma pride.</small></div>
+          <div><BrandLogo size={38} /><p className={styles.footerTagline}>Namma stage. Namma pride.</p></div>
           <nav><Link href="/events">Events</Link><Link href="/leaderboard">Leaderboard</Link><Link href="/admin/login">Admin</Link></nav>
         </footer>
       </section>
