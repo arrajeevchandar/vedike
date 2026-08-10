@@ -109,7 +109,8 @@ export function HomeExperience({ showSplash }: { showSplash: boolean }) {
     const element = event.currentTarget;
     const rect = element.getBoundingClientRect();
     element.style.transition = "transform .12s ease-out";
-    element.style.transform = `translate(${(event.clientX - (rect.left + rect.width / 2)) * 0.18}px,${(event.clientY - (rect.top + rect.height / 2)) * 0.3}px)`;
+    const horizontalPull = element.closest(`.${styles.ctas}`) ? 0 : (event.clientX - (rect.left + rect.width / 2)) * 0.18;
+    element.style.transform = `translate(${horizontalPull}px,${(event.clientY - (rect.top + rect.height / 2)) * 0.3}px)`;
   };
   const magnetLeave = (event: React.MouseEvent<HTMLElement>) => {
     event.currentTarget.style.transition = "transform .4s cubic-bezier(.2,1.4,.4,1)";
