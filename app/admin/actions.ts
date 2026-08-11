@@ -27,6 +27,12 @@ import { finalizeCompetitionWorkflow } from "@/workflows/finalize-competition";
 import { reconcilePaymentWorkflow } from "@/workflows/reconcile-payment";
 import { competitionPhaseWorkflow } from "@/workflows/competition-phase";
 import { votingWindowOpen } from "@/lib/competition-phase";
+import {
+  type AdminFormState,
+  type ScheduleField,
+  utcToIstInput,
+  validateCompetitionSchedule,
+} from "@/lib/admin-schedule";
 
 export type LoginState = { error?: string };
 
@@ -60,11 +66,36 @@ function ensureDb() {
   return getDb();
 }
 
-function validationError(message: string): never {
-  throw new Error(message);
+class AdminValidationError extends Error {
+  constructor(message: string, readonly fieldErrors?: Partial<Record<ScheduleField, string>>) {
+    super(message);
+    this.name = "AdminValidationError";
+  }
 }
 
-export async function saveEventAction(form: FormData) {
+function validationError(message: string, fieldErrors?: Partial<Record<ScheduleField, string>>): never {
+  throw new AdminValidationError(message, fieldErrors);
+}
+
+function readIstField(form: FormData, field: ScheduleField) {
+  try {
+    return istInputToUtc(String(form.get(field) ?? ""));
+  } catch {
+    validationError("Choose a valid date and time.", { [field]: "Choose a valid date and time." });
+  }
+}
+
+function zodScheduleErrors(issues: Array<{ path: PropertyKey[]; message: string }>) {
+  const fieldErrors: Partial<Record<ScheduleField, string>> = {};
+  const scheduleFields = new Set<ScheduleField>(["startsAt", "endsAt", "applicationStartsAt", "applicationEndsAt", "votingStartsAt", "votingEndsAt"]);
+  for (const issue of issues) {
+    const field = String(issue.path[0] ?? "") as ScheduleField;
+    if (scheduleFields.has(field) && !fieldErrors[field]) fieldErrors[field] = issue.message;
+  }
+  return fieldErrors;
+}
+
+async function persistEvent(form: FormData) {
   await requireAdmin();
   await assertTrustedOrigin();
   const id = String(form.get("id") ?? "");
@@ -72,10 +103,10 @@ export async function saveEventAction(form: FormData) {
     id: id || undefined,
     title: form.get("title"),
     description: form.get("description"),
-    startsAt: istInputToUtc(String(form.get("startsAt") ?? "")),
-    endsAt: istInputToUtc(String(form.get("endsAt") ?? "")),
+    startsAt: readIstField(form, "startsAt"),
+    endsAt: readIstField(form, "endsAt"),
   });
-  if (!parsed.success) validationError(parsed.error.issues[0]?.message ?? "Invalid event.");
+  if (!parsed.success) validationError(parsed.error.issues[0]?.message ?? "Invalid event.", zodScheduleErrors(parsed.error.issues));
   const db = ensureDb();
   await db.transaction(async (tx) => {
     if (parsed.data.id) {
@@ -94,15 +125,14 @@ export async function saveEventAction(form: FormData) {
             ne(competitions.lifecycle, "ARCHIVED"),
           ),
         );
-      if (
-        children.some(
-          (competition) =>
-            competition.startsAt < parsed.data.startsAt ||
-            competition.endsAt > parsed.data.endsAt,
-        )
-      ) {
-        validationError("Event dates must still contain every active competition.");
+      const fieldErrors: Partial<Record<ScheduleField, string>> = {};
+      if (children.some((competition) => competition.startsAt < parsed.data.startsAt)) {
+        fieldErrors.startsAt = "Start cannot move beyond the earliest active competition.";
       }
+      if (children.some((competition) => competition.endsAt > parsed.data.endsAt)) {
+        fieldErrors.endsAt = "End cannot move before the latest active competition.";
+      }
+      if (Object.keys(fieldErrors).length) validationError("Event dates must still contain every active competition.", fieldErrors);
       await tx
         .update(events)
         .set({
@@ -142,6 +172,16 @@ export async function saveEventAction(form: FormData) {
   revalidatePath("/competitions");
   revalidatePath("/leaderboard");
   revalidatePath("/admin/events");
+  return id ? "Event schedule updated." : "Event created.";
+}
+
+export async function saveEventAction(_: AdminFormState, form: FormData): Promise<AdminFormState> {
+  try {
+    return { status: "success", message: await persistEvent(form) };
+  } catch (error) {
+    if (error instanceof AdminValidationError) return { status: "error", message: error.message, fieldErrors: error.fieldErrors };
+    throw error;
+  }
 }
 
 export async function archiveEventAction(form: FormData) {
@@ -229,25 +269,31 @@ export async function completeEventAction(form: FormData) {
   revalidatePath("/admin/competitions");
 }
 
-export async function saveCompetitionAction(form: FormData) {
+async function persistCompetition(form: FormData) {
   await requireAdmin();
   await assertTrustedOrigin();
   const id = String(form.get("id") ?? "");
   const rawLimit = String(form.get("maxEntries") ?? "1");
+  const rawSchedule = {
+    applicationStartsAt: String(form.get("applicationStartsAt") ?? ""),
+    applicationEndsAt: String(form.get("applicationEndsAt") ?? ""),
+    votingStartsAt: String(form.get("votingStartsAt") ?? ""),
+    votingEndsAt: String(form.get("votingEndsAt") ?? ""),
+  };
   const parsed = competitionSchema.safeParse({
     id: id || undefined,
     eventId: form.get("eventId"),
     title: form.get("title"),
     description: form.get("description"),
     rules: form.get("rules"),
-    applicationStartsAt: istInputToUtc(String(form.get("applicationStartsAt") ?? "")),
-    applicationEndsAt: istInputToUtc(String(form.get("applicationEndsAt") ?? "")),
-    votingStartsAt: istInputToUtc(String(form.get("votingStartsAt") ?? "")),
-    votingEndsAt: istInputToUtc(String(form.get("votingEndsAt") ?? "")),
+    applicationStartsAt: readIstField(form, "applicationStartsAt"),
+    applicationEndsAt: readIstField(form, "applicationEndsAt"),
+    votingStartsAt: readIstField(form, "votingStartsAt"),
+    votingEndsAt: readIstField(form, "votingEndsAt"),
     maxEntriesPerParticipant: rawLimit === "" ? "" : Number(rawLimit),
   });
   if (!parsed.success) {
-    validationError(parsed.error.issues[0]?.message ?? "Invalid competition.");
+    validationError(parsed.error.issues[0]?.message ?? "Invalid competition.", zodScheduleErrors(parsed.error.issues));
   }
   const maxEntriesPerParticipant =
     parsed.data.maxEntriesPerParticipant === ""
@@ -264,14 +310,15 @@ export async function saveCompetitionAction(form: FormData) {
       .from(events)
       .where(eq(events.id, parsed.data.eventId))
       .limit(1);
-    if (
-      !event ||
-      event.isShowcase ||
-      event.publicationState !== "PUBLISHED" ||
-      parsed.data.applicationStartsAt < event.startsAt ||
-      parsed.data.votingEndsAt > event.endsAt
-    ) {
-      validationError("Competition dates must be inside an active parent event.");
+    if (!event || event.isShowcase || event.publicationState !== "PUBLISHED") {
+      validationError("Choose an active published parent event.");
+    }
+    const scheduleErrors = validateCompetitionSchedule(rawSchedule, {
+      startsAt: utcToIstInput(event.startsAt),
+      endsAt: utcToIstInput(event.endsAt),
+    });
+    if (Object.keys(scheduleErrors).length) {
+      validationError("Fix the highlighted schedule fields.", scheduleErrors);
     }
     if (parsed.data.id) {
       const [existing] = await tx
@@ -348,6 +395,16 @@ export async function saveCompetitionAction(form: FormData) {
   revalidatePath("/competitions");
   revalidatePath("/leaderboard");
   revalidatePath("/admin/competitions");
+  return id ? "Competition schedule updated." : "Competition created.";
+}
+
+export async function saveCompetitionAction(_: AdminFormState, form: FormData): Promise<AdminFormState> {
+  try {
+    return { status: "success", message: await persistCompetition(form) };
+  } catch (error) {
+    if (error instanceof AdminValidationError) return { status: "error", message: error.message, fieldErrors: error.fieldErrors };
+    throw error;
+  }
 }
 
 export async function archiveCompetitionAction(form: FormData) {
